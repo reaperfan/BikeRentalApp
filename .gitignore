@@ -1,0 +1,10 @@
+# Visual Studio temp és cache
+.vs/
+bin/
+obj/
+
+# SQLite adatbázis és lokális beállítások
+*.db
+*.db-shm
+*.db-wal
+appsettings.Development.json
