@@ -1,6 +1,14 @@
 @Backend_HostAddress = http://localhost:5006
 
-GET {{Backend_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{Backend_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "teszt@example.com", "password": "Jelszo123!" }
+
+###
+
+# Tokent a login válaszából kell bemásolni
+GET {{Backend_HostAddress}}/api/auth/me
+Authorization: Bearer <token>
 
 ###
