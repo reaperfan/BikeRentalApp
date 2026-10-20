@@ -56,7 +56,7 @@ public static class AuthEndpoints
             if (user == null)
                 return Results.Unauthorized();
 
-            return Results.Ok(new UserInfoDto(user.Id, user.Username, user.Email, user.Role));
+            return Results.Ok(new UserInfoDto(user.Id, user.Username, user.Email, user.Role, user.CreatedAt));
         });
     }
 }

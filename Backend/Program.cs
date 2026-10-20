@@ -37,7 +37,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// A Vite fejlesztői proxy a launchSettings.json szerinti HTTP-portot használja.
+// Fejlesztésben a HTTPS-re irányítás a böngészőt a backend külön HTTPS-portjára
+// küldené át, megkerülve a proxyt és a helyi fejlesztői tanúsítványt.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

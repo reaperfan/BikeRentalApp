@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Backend.Dtos;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -67,8 +68,15 @@ public class AuthTests : IClassFixture<AuthApiFactory>
 
         var me = await GetMe(login.AccessToken);
         Assert.Equal(HttpStatusCode.OK, me.StatusCode);
-        var info = await me.Content.ReadFromJsonAsync<UserInfoDto>();
-        Assert.Equal("teszt", info!.Username);
+        using var profile = JsonDocument.Parse(await me.Content.ReadAsStringAsync());
+        var user = profile.RootElement;
+        Assert.True(user.GetProperty("id").GetInt32() > 0);
+        Assert.Equal("teszt", user.GetProperty("username").GetString());
+        Assert.EndsWith("@example.com", user.GetProperty("email").GetString());
+        Assert.Equal("Customer", user.GetProperty("role").GetString());
+        Assert.True(user.GetProperty("createdAt").TryGetDateTimeOffset(out var createdAt));
+        Assert.True(createdAt <= DateTimeOffset.UtcNow);
+        Assert.False(user.TryGetProperty("passwordHash", out _));
     }
 
     [Fact]

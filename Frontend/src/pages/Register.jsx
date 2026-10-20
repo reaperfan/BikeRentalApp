@@ -60,9 +60,23 @@ export default function Register() {
   )
 
   return (
-    <div className="auth-page">
+    <main className="auth-layout page-width register-layout">
+      <aside className="auth-showcase register-showcase">
+        <span className="showcase-label">JÓ TÁRSASÁG. JÓ UTAK.</span>
+        <div className="showcase-spark" aria-hidden="true">✳</div>
+        <div className="showcase-message">
+          <h1>Az első<br />tekerés<br />itt kezdődik.</h1>
+          <p>Hozz létre egy fiókot pár pillanat alatt.</p>
+        </div>
+        <div className="showcase-bottom"><span>CSATLAKOZZ A KÖZÖSSÉGHEZ</span><span aria-hidden="true">↗</span></div>
+      </aside>
+
       <form className="auth-card" onSubmit={handleSubmit} noValidate>
-        <h1>Regisztráció</h1>
+        <div className="form-heading">
+          <span className="section-kicker">INDULJUNK</span>
+          <h2>Regisztráció</h2>
+          <p>Hozd létre a fiókodat, és indulhat a közös út.</p>
+        </div>
 
         {error && <p className="alert error" role="alert">{error}</p>}
 
@@ -71,14 +85,14 @@ export default function Register() {
         {field('password', 'Jelszó', 'password', 'new-password')}
         {field('confirm', 'Jelszó megerősítése', 'password', 'new-password')}
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Regisztráció...' : 'Regisztráció'}
+        <button className="button-primary form-submit" type="submit" disabled={submitting}>
+          {submitting ? 'Regisztráció...' : 'Fiók létrehozása'} <span aria-hidden="true">→</span>
         </button>
 
         <p className="switch">
           Van már fiókod? <Link to="/login">Bejelentkezés</Link>
         </p>
       </form>
-    </div>
+    </main>
   )
 }
