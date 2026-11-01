@@ -9,4 +9,8 @@ public class BikeDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     
+    public DbSet<ServiceAppointment> ServiceAppointments => Set<ServiceAppointment>();
+
+    public DbSet<Review> Reviews => Set<Review>();
+
 }
