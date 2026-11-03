@@ -2,6 +2,7 @@
 .vs/
 bin/
 obj/
+*.csproj.user
 
 # SQLite adatbázis és lokális beállítások
 *.db

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(BikeDbContext))]
-    [Migration("20261101183543_⁠Reviews")]
-    partial class _⁠Reviews
+    [Migration("20261101183543_Reviews")]
+    partial class Reviews
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
