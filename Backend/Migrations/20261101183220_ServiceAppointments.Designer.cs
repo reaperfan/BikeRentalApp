@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(BikeDbContext))]
-    [Migration("20261101183220_⁠ServiceAppointments")]
-    partial class _⁠ServiceAppointments
+    [Migration("20261101183220_ServiceAppointments")]
+    partial class ServiceAppointments
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
