@@ -16,6 +16,7 @@ export default function AppHeader() {
           <>
             <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Főoldal</NavLink>
             <NavLink to="/profile" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Profil</NavLink>
+            <NavLink to="/szerviz" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Szerviz</NavLink>
             <button className="nav-logout" type="button" onClick={logout}>Kijelentkezés</button>
           </>
         ) : (
