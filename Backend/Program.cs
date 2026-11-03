@@ -13,6 +13,14 @@ builder.Services.AddDbContext<BikeDbContext>(options =>
 // JWT hitelesítés + jogosultságkezelés
 builder.Services.AddJwtAuth(builder.Configuration);
 
+builder.Services.AddOptions<Backend.Services.ServiceSchedule>()
+    .Bind(builder.Configuration.GetSection("ServiceSchedule"))
+    .Validate(s => s.OpeningHour >= 0 && s.ClosingHour <= 23 && s.ClosingHour > s.OpeningHour &&
+        s.SlotMinutes > 0 && s.SlotMinutes <= (s.ClosingHour - s.OpeningHour) * 60 &&
+        s.BookingHorizonDays is > 0 and <= 365, "Érvénytelen szerviz nyitvatartás.")
+    .Validate(s => TimeZoneInfo.TryFindSystemTimeZoneById(s.TimeZoneId, out _), "Érvénytelen időzóna.")
+    .ValidateOnStart();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -50,6 +58,7 @@ app.UseAuthorization();
 
 // Modulok regisztrációja
 app.MapAuthEndpoints();
+app.MapServiceAppointmentEndpoints();
 
 app.Run();
 
