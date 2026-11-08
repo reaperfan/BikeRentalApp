@@ -59,6 +59,7 @@ app.UseAuthorization();
 // Modulok regisztrációja
 app.MapAuthEndpoints();
 app.MapBikeEndpoints();
+app.MapRentalEndpoints();
 app.MapServiceAppointmentEndpoints();
 
 app.Run();

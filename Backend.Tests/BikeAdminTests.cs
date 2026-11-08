@@ -112,16 +112,30 @@ public class BikeAdminTests : IClassFixture<AuthApiFactory>
     [Fact]
     public async Task DeleteBike_AsAdmin_ReturnsNoContent()
     {
+        // Olyan biciklit törlünk, amelyhez nincs kölcsönzés (ID > 15 lesz az admin tesztből létrehozva)
+        // Előbb létrehozunk egy új biciklit, aztán törlünk
+        var newBike = new BikeDtoCreateUpdate(
+            "Test Bike to Delete",
+            BikeType.City,
+            5000m,
+            "/images/bikes/test.jpg"
+        );
+
+        var createRes = await AdminRequest(HttpMethod.Post, "/api/bikes", newBike);
+        Assert.Equal(HttpStatusCode.Created, createRes.StatusCode);
+        var created = await createRes.Content.ReadFromJsonAsync<BikeDtoResponse>();
+        var bikeIdToDelete = created!.Id;
+
         // Ellenőrzünk hogy létezik
-        var getRes = await _client.GetAsync("/api/bikes/1");
+        var getRes = await _client.GetAsync($"/api/bikes/{bikeIdToDelete}");
         Assert.Equal(HttpStatusCode.OK, getRes.StatusCode);
 
         // Törlünk
-        var deleteRes = await AdminRequest(HttpMethod.Delete, "/api/bikes/1");
+        var deleteRes = await AdminRequest(HttpMethod.Delete, $"/api/bikes/{bikeIdToDelete}");
         Assert.Equal(HttpStatusCode.NoContent, deleteRes.StatusCode);
 
         // Ellenőrzünk hogy már nem létezik
-        var getAfterRes = await _client.GetAsync("/api/bikes/1");
+        var getAfterRes = await _client.GetAsync($"/api/bikes/{bikeIdToDelete}");
         Assert.Equal(HttpStatusCode.NotFound, getAfterRes.StatusCode);
     }
 

@@ -9,9 +9,21 @@ public class BikeDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Bike> Bikes => Set<Bike>();
+    public DbSet<Rental> Rentals => Set<Rental>();
 
     public DbSet<ServiceAppointment> ServiceAppointments => Set<ServiceAppointment>();
 
     public DbSet<Review> Reviews => Set<Review>();
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Rental - Bike kapcsolat (One-to-Many)
+        modelBuilder.Entity<Rental>()
+            .HasOne(r => r.Bike)
+            .WithMany()
+            .HasForeignKey(r => r.BikeId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
 }

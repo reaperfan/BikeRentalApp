@@ -67,6 +67,42 @@ public class AuthApiFactory : WebApplicationFactory<Program>
             db.SaveChanges();
         }
 
+        // Seed rentals ha még nincsenek
+        if (!db.Rentals.Any())
+        {
+            var now = DateTime.UtcNow;
+            db.Rentals.AddRange(
+                new Rental 
+                { 
+                    BikeId = 1, 
+                    CustomerName = "John Doe", 
+                    CustomerEmail = "john@example.com",
+                    StartDate = now.AddDays(1),
+                    EndDate = now.AddDays(3),
+                    CreatedAt = now
+                },
+                new Rental 
+                { 
+                    BikeId = 2, 
+                    CustomerName = "Jane Smith", 
+                    CustomerEmail = "jane@example.com",
+                    StartDate = now.AddDays(5),
+                    EndDate = now.AddDays(7),
+                    CreatedAt = now
+                },
+                new Rental 
+                { 
+                    BikeId = 5, 
+                    CustomerName = "Bob Wilson", 
+                    CustomerEmail = "bob@example.com",
+                    StartDate = now.AddDays(2),
+                    EndDate = now.AddDays(4),
+                    CreatedAt = now
+                }
+            );
+            db.SaveChanges();
+        }
+
         base.ConfigureClient(client);
     }
 
