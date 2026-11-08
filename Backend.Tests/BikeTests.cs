@@ -81,4 +81,136 @@ public class BikeTests : IClassFixture<AuthApiFactory>
         var res = await _client.GetAsync("/api/bikes/999");
         Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
     }
+
+    [Fact]
+    public async Task GetBikes_FilterByType_MTB_ReturnsMTBBikesOnly()
+    {
+        var res = await _client.GetAsync("/api/bikes?type=0");  // 0 = MTB
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.NotEmpty(bikes);
+        Assert.All(bikes, b => Assert.Equal(BikeType.MTB, b.Type));
+        Assert.Equal(3, bikes.Count);  // 3 MTB bicikli van a seedben
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterByType_Trekking_ReturnsTrekkingBikesOnly()
+    {
+        var res = await _client.GetAsync("/api/bikes?type=1");  // 1 = Trekking
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.Equal(3, bikes.Count);
+        Assert.All(bikes, b => Assert.Equal(BikeType.Trekking, b.Type));
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterByType_City_ReturnsCityBikesOnly()
+    {
+        var res = await _client.GetAsync("/api/bikes?type=2");  // 2 = City
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.Equal(3, bikes.Count);
+        Assert.All(bikes, b => Assert.Equal(BikeType.City, b.Type));
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterByType_EBike_ReturnsEBikesOnly()
+    {
+        var res = await _client.GetAsync("/api/bikes?type=3");  // 3 = EBike
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.Equal(3, bikes.Count);
+        Assert.All(bikes, b => Assert.Equal(BikeType.EBike, b.Type));
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterByType_Kid_ReturnsKidBikesOnly()
+    {
+        var res = await _client.GetAsync("/api/bikes?type=4");  // 4 = Kid
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.Equal(3, bikes.Count);
+        Assert.All(bikes, b => Assert.Equal(BikeType.Kid, b.Type));
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterByAvailable_True_ReturnsOnlyAvailableBikes()
+    {
+        var res = await _client.GetAsync("/api/bikes?available=true");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.NotEmpty(bikes);
+        Assert.All(bikes, b => Assert.True(b.IsAvailable));
+        Assert.Equal(15, bikes.Count);  // Minden bicikli elérhető a seedben
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterByAvailable_False_ReturnsOnlyUnavailableBikes()
+    {
+        var res = await _client.GetAsync("/api/bikes?available=false");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.Empty(bikes);  // Nincsenek nem elérhető biciklil a seedben
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterCombined_TypeAndAvailable_ReturnFilteredResult()
+    {
+        // MTB típusú és elérhető biciklil
+        var res = await _client.GetAsync("/api/bikes?type=0&available=true");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.NotEmpty(bikes);
+        Assert.Equal(3, bikes.Count);
+        Assert.All(bikes, b => 
+        {
+            Assert.Equal(BikeType.MTB, b.Type);
+            Assert.True(b.IsAvailable);
+        });
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterCombined_CityAndUnavailable_ReturnsEmpty()
+    {
+        // City típusú és nem elérhető biciklil (nincs ilyen)
+        var res = await _client.GetAsync("/api/bikes?type=2&available=false");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.Empty(bikes);
+    }
+
+    [Fact]
+    public async Task GetBikes_FilterCombined_EBikeAndAvailable_ReturnAllAvailableEBikes()
+    {
+        // EBike típusú és elérhető biciklil
+        var res = await _client.GetAsync("/api/bikes?type=3&available=true");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var bikes = await res.Content.ReadFromJsonAsync<List<BikeDtoResponse>>();
+        Assert.NotNull(bikes);
+        Assert.Equal(3, bikes.Count);
+        Assert.All(bikes, b =>
+        {
+            Assert.Equal(BikeType.EBike, b.Type);
+            Assert.True(b.IsAvailable);
+        });
+    }
 }

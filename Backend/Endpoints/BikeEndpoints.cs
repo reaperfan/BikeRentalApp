@@ -12,13 +12,25 @@ public static class BikeEndpoints
     {
         var group = routes.MapGroup("/api/bikes").WithTags("Bikes").AllowAnonymous();
 
-        // Összes bicikli listája
-        group.MapGet("/", async (BikeDbContext db) =>
+        // Összes bicikli listája (szűréssel: type, available, vagy kombinált)
+        group.MapGet("/", async (BikeDbContext db, BikeType? type, bool? available) =>
         {
-            var bikes = await db.Bikes.AsNoTracking().ToListAsync();
+            IQueryable<Bike> query = db.Bikes.AsNoTracking();
+
+            if (type.HasValue)
+                query = query.Where(b => b.Type == type.Value);
+
+            if (available.HasValue)
+                query = query.Where(b => b.IsAvailable == available.Value);
+
+            var bikes = await query.ToListAsync();
             return Results.Ok(bikes.Select(b => new BikeDtoResponse(
                 b.Id, b.Name, b.Type, b.DailyPrice, b.ImageUrl, b.IsAvailable)));
-        });
+        })
+        .WithName("GetBikes")
+        .WithOpenApi()
+        .WithDescription("Összes bicikli listája. Opcionális szűrési paraméterek: type (BikeType), available (bool)")
+        .Produces(StatusCodes.Status200OK);
 
         // Konkrét bicikli lekérdezése ID alapján
         group.MapGet("/{id}", async (int id, BikeDbContext db) =>
@@ -29,7 +41,9 @@ public static class BikeEndpoints
 
             return Results.Ok(new BikeDtoResponse(
                 bike.Id, bike.Name, bike.Type, bike.DailyPrice, bike.ImageUrl, bike.IsAvailable));
-        });
+        })
+        .WithName("GetBikeById")
+        .WithOpenApi();
 
         // Admin operációk
         var adminGroup = routes.MapGroup("/api/bikes").WithTags("Bikes Admin").RequireAuthorization(AuthConstants.AdminPolicy);
