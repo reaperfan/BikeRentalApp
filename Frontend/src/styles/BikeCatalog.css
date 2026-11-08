@@ -1,0 +1,265 @@
+.bike-catalog {
+  padding: 20px;
+  min-height: calc(100vh - 60px);
+  background: #f5f5f5;
+}
+
+.catalog-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bike-catalog h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+  font-size: 2.5rem;
+}
+
+.filters {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: #333;
+}
+
+.filter-group select,
+.filter-group input[type="checkbox"] {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filter-group select {
+  min-width: 150px;
+  background: white;
+}
+
+.filter-group select:hover,
+.filter-group select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.filter-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.filter-group label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.error-message {
+  padding: 15px;
+  margin-bottom: 20px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  color: #721c24;
+  text-align: center;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.no-bikes {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 1.1rem;
+  color: #999;
+}
+
+.bikes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.bike-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.bike-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.bike-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.bike-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #e9ecef;
+  color: #999;
+}
+
+.image-placeholder span {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.image-placeholder p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.unavailable-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #dc3545;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.bike-info {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.bike-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.bike-type {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.bike-price {
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #007bff;
+}
+
+.btn-rental,
+.btn-unavailable {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: auto;
+}
+
+.btn-rental {
+  background: #28a745;
+  color: white;
+}
+
+.btn-rental:hover {
+  background: #218838;
+}
+
+.btn-rental:active {
+  background: #1e7e34;
+}
+
+.btn-unavailable {
+  background: #e9ecef;
+  color: #999;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .bikes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .bike-catalog h1 {
+    font-size: 2rem;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-group select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .bike-catalog {
+    padding: 10px;
+  }
+
+  .bikes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bike-catalog h1 {
+    font-size: 1.5rem;
+  }
+
+  .filters {
+    padding: 15px;
+    gap: 15px;
+  }
+}
