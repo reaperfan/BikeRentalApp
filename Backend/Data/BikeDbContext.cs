@@ -8,7 +8,8 @@ public class BikeDbContext : DbContext
     public BikeDbContext(DbContextOptions<BikeDbContext> options) : base(options) { }
 
     public DbSet<User> Users => Set<User>();
-    
+    public DbSet<Bike> Bikes => Set<Bike>();
+
     public DbSet<ServiceAppointment> ServiceAppointments => Set<ServiceAppointment>();
 
     public DbSet<Review> Reviews => Set<Review>();
