@@ -53,6 +53,20 @@ public class AuthApiFactory : WebApplicationFactory<Program>
             db.SaveChanges();
         }
 
+        // Seed admin user ha még nincs
+        if (!db.Users.Any(u => u.Email == "admin@test.com"))
+        {
+            var admin = new User
+            {
+                Username = "TestAdmin",
+                Email = "admin@test.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("AdminPassword123!"),
+                Role = "Admin"
+            };
+            db.Users.Add(admin);
+            db.SaveChanges();
+        }
+
         base.ConfigureClient(client);
     }
 
