@@ -1,132 +1,62 @@
-# Értékelések backend API
+# Egyszerű értékelési API
 
-Az értékelés a meglévő `Review` modellen keresztül egy szervizfoglaláshoz tartozik.
-A hozzá kapcsolódó frontend a `/ertekelesek` oldalon érhető el; használata és
-ellenőrzése a [frontend leírásában](../Frontend/REVIEWS.md) található.
+Bejelentkezés után bárki írhat 1–5 csillagos értékelést és opcionális szöveges
+véleményt. Nem kell hozzá szervizfoglalás vagy befejezett szerviz.
+Egy felhasználó több véleményt is írhat. A szöveg legfeljebb 2000 karakter;
+a szélső szóközök eltűnnek, az üres szöveg `null` lesz.
 
-## Üzleti szabályok
-
-- Csak a bejelentkezett ügyfél **saját, `Completed` állapotú** szervizfoglalása értékelhető.
-- Foglalásonként legfeljebb egy értékelés. Az alkalmazás tranzakciója és az adatbázis
-  egyedi indexe is megakadályozza a dupla értékelést, párhuzamos kéréseknél is.
-- Pontszám: 1–5 közötti egész szám. A szöveg opcionális, legfeljebb 2000 karakter.
-  A szélső szóközök eltűnnek, az üres vélemény `null` lesz.
-- A szerző módosíthatja/törölheti a saját értékelését. Az admin más értékelését
-  törölheti, átírni nem jogosult. Törlés után a foglalás ismét értékelhető.
-- A felhasználóazonosító és létrehozási idő szerveroldali, a JWT és a rendszeróra alapján.
-  Módosításkor az eredeti létrehozási dátum megmarad; a foglalás nem cserélhető ki.
-- A nyilvános válasz csak az értékelés azonosítóját, a szerző felhasználónevét,
-  pontszámát, véleményét és dátumát adja ki; e-mailt és foglalási adatokat nem.
-
-## Végpontok
-
-| Metódus | Útvonal | Jogosultság és eredmény |
+| Metódus | Útvonal | Működés |
 | --- | --- | --- |
-| GET | `/api/reviews?page=1&pageSize=10&rating=5` | Nyilvános, lapozott lista; a `rating` szűrő opcionális |
+| GET | `/api/reviews?page=1&pageSize=10&rating=5` | Nyilvános, lapozott lista; a pontszámszűrő opcionális |
 | GET | `/api/reviews/{id}` | Egy nyilvános értékelés |
 | GET | `/api/reviews/summary` | Nyilvános átlag és csillagonkénti darabszám |
-| GET | `/api/reviews/mine` | Bejelentkezett felhasználó saját értékelései |
-| GET | `/api/reviews/reviewable-appointments` | Saját befejezett, még nem értékelt szervizek |
-| POST | `/api/reviews` | Saját szerviz értékelése; 201 és saját értékelés válasza |
-| PUT | `/api/reviews/{id}` | Saját értékelés cseréje; 204 |
+| GET | `/api/reviews/mine` | Saját értékelések, bejelentkezve |
+| POST | `/api/reviews` | Értékelés beküldése, bejelentkezve; 201 |
+| PUT | `/api/reviews/{id}` | Saját értékelés módosítása; 204 |
 | DELETE | `/api/reviews/{id}` | Saját értékelés törlése; 204 |
-| DELETE | `/api/reviews/admin/{id}` | `Admin` szerepkörrel moderációs törlés; 204 |
+| DELETE | `/api/reviews/admin/{id}` | Adminisztrátori törlés; 204 |
 
-A védett kérések fejléce: `Authorization: Bearer <accessToken>`.
-Az alkalmazás meglévő `api()` frontend-segédfüggvénye használható majd hozzájuk.
-A nyilvános lista és részletek bejelentkezés nélkül is elérhetők.
-
-### Létrehozás
+POST és PUT törzse:
 
 ```json
-{
-  "serviceAppointmentId": 12,
-  "rating": 5,
-  "comment": "Pontos, segítőkész szerviz."
-}
+{"rating": 5, "comment": "Kedves, segítőkész csapat!"}
 ```
 
-Válasz (a `Location` fejléc a nyilvános részletekre mutat):
+A `serviceAppointmentId` nem része az API-nak. Az értékelhető foglalások korábbi
+`/reviewable-appointments` végpontja megszűnt.
 
-```json
-{
-  "id": 7,
-  "serviceAppointmentId": 12,
-  "rating": 5,
-  "comment": "Pontos, segítőkész szerviz.",
-  "createdAt": "2026-11-09T12:00:00+00:00"
-}
-```
+A saját értékelés válasza `{ id, rating, comment, createdAt }`; a nyilvános
+válasz ehhez az `authorName` felhasználónevet adja. A nyilvános listában nincs
+felhasználóazonosító, e-mail vagy foglalási adat. Az idők UTC-ben érkeznek.
+A saját értékelés létrehozási dátuma módosításkor megmarad.
 
-Ugyanezt a struktúrát adja a `/mine` tömbje. A módosítás törzse csak `rating`
-és opcionális `comment`; PUT esetén a hiányzó megjegyzés törli a korábbi szöveget.
-Az időpontok UTC-ben, explicit eltolással érkeznek.
+Lista: `{ page, pageSize, totalCount, items }`, legújabb elöl, azonos dátumnál
+azonosító szerint csökkenő sorrendben. Alapoldalméret 10, maximum 100;
+az oldalszám 1–1000000 között lehet. Az üres oldal üres tömböt ad.
+Összesítés: `{ totalCount, averageRating, oneStar, twoStars, threeStars,
+fourStars, fiveStars }`; vélemények nélkül az átlag `null`, a darabszámok 0-k.
 
-### Naptárból/űrlapból értékelhető szervizek
+A védett műveletekhez a meglévő login JWT-je kell:
+`Authorization: Bearer <accessToken>`. Más véleményét átírni nem lehet;
+az admin is csak törölheti a más által írt véleményt.
+Hibák: 400 érvénytelen adat, 401 hiányzó/lejárt login, 403 hiányzó adminjog,
+404 hiányzó vagy más ügyfélhez tartozó módosítandó értékelés.
+Az üzleti hibák `{ "message": "…" }` alakúak.
 
-A `/reviewable-appointments` válasza tömb: `id`, `appointmentDate`, `bikeType`,
-`serviceType`. Az űrlap ezekből kínálhat választást. A listából az értékelés után
-eltűnik a foglalás. A backend POST-nál is ellenőrzi a jogosultságot és a státuszt.
+## Adatbázis és ellenőrzés
 
-### Lista és összesítés
-
-A lista válasza: `{ page, pageSize, totalCount, items }`.
-Az `items` elemei: `{ id, authorName, rating, comment, createdAt }`.
-Legújabb értékelés elöl, azonos dátumnál azonosító szerint csökkenő sorrend.
-Alapértelmezett oldalméret 10, maximum 100, az oldal 1–1000000 között lehet.
-A `totalCount` a szűrésnek megfelelő darabszám. A határon túli oldal üres tömböt ad.
-
-A `/summary` válasza:
-
-```json
-{
-  "totalCount": 2,
-  "averageRating": 4.5,
-  "oneStar": 0,
-  "twoStars": 0,
-  "threeStars": 0,
-  "fourStars": 1,
-  "fiveStars": 1
-}
-```
-
-Üres adatbázisban az átlag `null`, a darabszámok 0-k. Az átlagot a backend nem
-kerekíti; a frontend formázza a kívánt tizedesjegyre. Módosítás és törlés után az
-összesítés a jelenlegi adatokat mutatja. A vélemény sima szöveg: a frontend
-szövegként jelenítse meg, HTML-ként ne értelmezze.
-
-## Hibák
-
-- 400: hibás pontszám, túl hosszú szöveg, hibás listázási paraméterek.
-- 401: hiányzó/érvénytelen hitelesítés a védett útvonalakon.
-- 403: adminjog nélküli moderáció.
-- 404: nem létező vagy más ügyfélhez tartozó módosítandó foglalás/értékelés.
-- 409: nem befejezett szerviz vagy már létező értékelés.
-
-Az üzleti hibaválasz `{ "message": "…" }`. A hibás JSON vagy nem konvertálható
-query-paraméter keretrendszerszintű 400-as választ adhat. A frontend 409-nél
-frissítse az értékelhető foglalásokat és a saját értékeléseket.
-
-## Migráció és ellenőrzés
-
-A `UniqueReviewPerAppointment` migráció a meglévő `Reviews.ServiceAppointmentId`
-indexet egyedivé alakítja; táblát és értékeléseket nem töröl.
+Az `OptionalReviewAppointment` migráció opcionálissá teszi a korábbi
+szervizkapcsolatot. A régi vélemények és kapcsolataik megmaradnak;
+az új értékelések `ServiceAppointmentId` mezője `null`. A korábbi egyedi index
+csak a régi, nem null foglalási hivatkozásokat védi, szerviz nélküli értékelésből
+több is tárolható. Az alkalmazás már nem használja ezt a kapcsolatot.
 
 ```sh
 dotnet ef database update --project Backend
 dotnet test BikeRentalApp.slnx
 ```
 
-Ha korábban egy foglaláshoz több értékelés került az adatbázisba, az egyedi index
-létrehozása meghiúsul. Ellenőrzés:
-
-```sql
-SELECT ServiceAppointmentId, COUNT(*)
-FROM Reviews
-GROUP BY ServiceAppointmentId
-HAVING COUNT(*) > 1;
-```
-
-Ilyen esetben a megtartandó véleményről külön döntés szükséges; a migráció nem
-választ önkényesen és nem töröl adatot. A tesztek izolált SQLite-adatbázisokat
-használnak, beleértve az előző sémáról frissítést és az adatok megőrzését.
+A korábbi kötelező kapcsolatot visszaállító downgrade előtt a szerviz nélküli
+véleményeket külön kezelni kell; hozzájuk a rendszer nem talál ki foglalást.
+A tesztek a szerviz nélküli beküldést és a régi adatok megőrzését is ellenőrzik.
+A frontend a `/ertekelesek` oldalon található.

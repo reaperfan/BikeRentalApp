@@ -94,7 +94,7 @@ namespace Backend.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ServiceAppointmentId")
+                    b.Property<int?>("ServiceAppointmentId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("UserId")
@@ -196,9 +196,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.Models.ServiceAppointment", "ServiceAppointment")
                         .WithMany()
-                        .HasForeignKey("ServiceAppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ServiceAppointmentId");
 
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()

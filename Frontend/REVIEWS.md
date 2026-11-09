@@ -1,56 +1,27 @@
-# Értékelési felület
+# Egyszerű értékelési felület
 
-Útvonal: `/ertekelesek`, elérhető a fejléc **Értékelések** menüpontjából.
-A meglévő React/Vite alkalmazás és az `/api/reviews` backend használatával működik,
-új frontendfüggőség nélkül.
+Útvonal: `/ertekelesek`, a fejléc **Értékelések** menüpontja.
+Bejelentkezés után csillagot választasz, opcionálisan leírod a véleményed,
+és elküldöd. Nincs szervizválasztás, foglalás vagy befejezett szerviz ellenőrzése.
+A saját vélemények módosíthatók, megerősítés után törölhetők.
 
-## Használat
+A lista és az átlag bejelentkezés nélkül is látható. A lista pontszám szerint
+szűrhető és lapozható. Adminisztrátor a nyilvános kártyákról is törölhet.
+A véleményeket szövegként jelenítjük meg, HTML-t nem értelmezünk.
 
-Bejelentkezés nélkül is olvasható a lapozott lista, pontszám szerint szűrhető,
-és megtekinthető az átlag és a csillagonkénti megoszlás. Az űrlaphoz a bejelentkezési
-link visszahoz az értékelések oldalára.
-
-Bejelentkezve a saját, befejezett és még nem értékelt szervizekből lehet választani.
-A csillagok rádiógombok, billentyűzettel is használhatók. Szöveges vélemény nem
-kötelező, legfeljebb 2000 karakter. Az értékelés beküldése után a szerviz eltűnik a
-választóból. Saját értékelés módosítható vagy megerősítés után törölhető.
-Törlés után a foglalás újra értékelhető. Admin szerepkörrel a nyilvános kártyákon
-külön moderációs törlés érhető el.
-
-Mentés/törlés után a saját lista, a nyilvános lista és az összesítés frissül.
-A felület kezeli a betöltést, az üres listákat, a hálózati hibák újrapróbálását,
-a 409-es foglalási ütközést és a lejárt bejelentkezést. A véleményeket szövegként
-jeleníti meg, HTML-t nem értelmez. A dátumok budapesti helyi idő szerint láthatók.
-
-## Indítás
-
-Először alkalmazd a backend `UniqueReviewPerAppointment` migrációját a kiválasztott
-fejlesztői adatbázison. Az API-t a meglévő HTTP-profillal indítsd a repository gyökeréből:
+Indítás előtt alkalmazd a backend `OptionalReviewAppointment` migrációját:
 
 ```sh
 dotnet ef database update --project Backend
 dotnet run --project Backend --launch-profile http
 ```
 
-A `Frontend` könyvtárból:
+A `Frontend` könyvtárból `npm ci`, majd `npm run dev`. A meglévő Vite-proxy
+az 5006-os HTTP-porton futó backendhez továbbítja az `/api` kéréseket.
+Új frontendfüggőség nem szükséges.
 
-```sh
-npm ci
-npm run dev
-```
+Ellenőrzés: `npm run build`, `npm run lint` és böngészős foglalás nélküli
+beküldés, módosítás, törlés, valamint mobilnézet. A meglévő AuthContext,
+BikeCatalog és BikeRental lintfigyelmeztetései nem ehhez a változtatáshoz tartoznak.
 
-A Vite az `/api` kéréseket a backend 5006-os HTTP-portjára továbbítja.
-[Backend API-leírás](../Backend/REVIEW_API.md).
-
-## Ellenőrzés
-
-`npm run build` és `npm run lint`. Az új értékelési fájlok nem adnak
-lintfigyelmeztetést; az AuthContext, BikeCatalog és BikeRental meglévő figyelmeztetései
-nem ehhez a változtatáshoz tartoznak.
-
-Chromiumban, működő backenddel és külön ideiglenes SQLite-adatbázissal ellenőrizve:
-nyilvános üres lista, bejelentkezés utáni visszairányítás, csak saját befejezett
-szervizek kiválasztása, kötelező csillagválasztás, létrehozás, módosítás, megerősített
-törlés, szűrés, lapozás, adminisztrátori moderáció, ütközés utáni frissítés,
-hálózati hiba utáni újrapróbálás, HTML biztonságos szöveges megjelenítése és
-375 px-es mobilnézet vízszintes túlcsordulás nélkül.
+[API-leírás](../Backend/REVIEW_API.md).

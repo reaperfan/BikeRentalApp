@@ -3,7 +3,6 @@ using Backend.Auth;
 using Backend.Data;
 using Backend.Dtos;
 using Backend.Models;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -15,7 +14,7 @@ public static class ReviewEndpoints
         int.TryParse(user.FindFirstValue(JwtRegisteredClaimNames.Sub), out var id) && id > 0 ? id : null;
     private static DateTimeOffset Utc(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
     private static OwnReviewResponse Own(Review review) =>
-        new(review.Id, review.ServiceAppointmentId, review.Rating, review.Comment, Utc(review.CreatedAt));
+        new(review.Id, review.Rating, review.Comment, Utc(review.CreatedAt));
     private static bool Valid(int rating, string? comment) => rating is >= 1 and <= 5 && (comment?.Length ?? 0) <= 2000;
     private static string? Normalize(string? comment) => string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
     private static IResult Invalid() => Results.BadRequest(new { message = "A pontszám 1 és 5 közötti egész szám, a vélemény legfeljebb 2000 karakter lehet." });
@@ -59,43 +58,16 @@ public static class ReviewEndpoints
             return Results.Ok(reviews.Select(Own));
         }).WithName("GetMyReviews");
 
-        group.MapGet("/reviewable-appointments", async (ClaimsPrincipal user, BikeDbContext db, CancellationToken ct) =>
-        {
-            if (UserId(user) is not int userId) return Results.Unauthorized();
-            var appointments = await db.ServiceAppointments.AsNoTracking()
-                .Where(a => a.UserId == userId && a.Status == "Completed" && !db.Reviews.Any(r => r.ServiceAppointmentId == a.Id))
-                .OrderByDescending(a => a.AppointmentDate).ThenByDescending(a => a.Id).ToListAsync(ct);
-            return Results.Ok(appointments.Select(a => new ReviewableAppointmentResponse(a.Id, Utc(a.AppointmentDate), a.BikeType, a.ServiceType)));
-        }).WithName("GetReviewableAppointments");
-
         group.MapPost("/", async (CreateReviewRequest request, ClaimsPrincipal user, BikeDbContext db,
             TimeProvider clock, CancellationToken ct) =>
         {
             if (UserId(user) is not int userId) return Results.Unauthorized();
-            if (!Valid(request.Rating, request.Comment) || request.ServiceAppointmentId <= 0) return Invalid();
-            // A jogosultság, a státusz és az egyszeri értékelés ellenőrzése az írással egy tranzakció.
-            await db.Database.OpenConnectionAsync(ct);
-            await using var transaction = ((SqliteConnection)db.Database.GetDbConnection()).BeginTransaction(deferred: false);
-            await db.Database.UseTransactionAsync(transaction, ct);
-            var appointment = await db.ServiceAppointments.AsNoTracking()
-                .SingleOrDefaultAsync(a => a.Id == request.ServiceAppointmentId && a.UserId == userId, ct);
-            if (appointment == null) return Results.NotFound(new { message = "A szervizfoglalás nem található." });
-            if (appointment.Status != "Completed")
-                return Results.Conflict(new { message = "Csak befejezett szerviz értékelhető." });
-            if (await db.Reviews.AnyAsync(r => r.ServiceAppointmentId == appointment.Id, ct))
-                return Results.Conflict(new { message = "Ehhez a foglaláshoz már tartozik értékelés." });
-            var review = new Review { UserId = userId, ServiceAppointmentId = appointment.Id, Rating = request.Rating,
+            if (!Valid(request.Rating, request.Comment)) return Invalid();
+            if (!await db.Users.AnyAsync(u => u.Id == userId, ct)) return Results.Unauthorized();
+            var review = new Review { UserId = userId, Rating = request.Rating,
                 Comment = Normalize(request.Comment), CreatedAt = clock.GetUtcNow().UtcDateTime };
             db.Reviews.Add(review);
-            try
-            {
-                await db.SaveChangesAsync(ct);
-                await transaction.CommitAsync(ct);
-            }
-            catch (DbUpdateException ex) when (ex.InnerException is SqliteException { SqliteExtendedErrorCode: 2067 })
-            {
-                return Results.Conflict(new { message = "Ehhez a foglaláshoz már tartozik értékelés." });
-            }
+            await db.SaveChangesAsync(ct);
             return Results.Created($"/api/reviews/{review.Id}", Own(review));
         }).WithName("CreateReview");
 

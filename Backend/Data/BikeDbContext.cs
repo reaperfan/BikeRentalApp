@@ -19,7 +19,8 @@ public class BikeDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Egy szervizfoglaláshoz legfeljebb egy értékelés tartozhat.
+        // A korábbi szervizhez kötött értékelések kapcsolatát megőrizzük.
+        // Új értékelésnél a kapcsolat null, ebből több is megengedett.
         modelBuilder.Entity<Review>()
             .HasIndex(r => r.ServiceAppointmentId)
             .IsUnique();

@@ -9,7 +9,7 @@ namespace Backend.Tests;
 public sealed class ReviewMigrationTests
 {
     [Fact]
-    public async Task MigrationPreservesExistingReviewsAndEnforcesUniqueAppointment()
+    public async Task MigrationPreservesExistingReviewsAndAllowsReviewsWithoutService()
     {
         var path = Path.Combine(Path.GetTempPath(), $"review-migration-{Guid.NewGuid():N}.db");
         try
@@ -28,8 +28,13 @@ public sealed class ReviewMigrationTests
             var saved = await db.Reviews.AsNoTracking().SingleAsync();
             Assert.Equal("Megőrzendő", saved.Comment);
             Assert.Equal(review.Id, saved.Id);
-            db.Reviews.Add(new Review { UserId = user.Id, ServiceAppointmentId = appointment.Id, Rating = 1 });
-            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+            Assert.Equal(appointment.Id, saved.ServiceAppointmentId);
+            db.Reviews.AddRange(
+                new Review { UserId = user.Id, Rating = 1 },
+                new Review { UserId = user.Id, Rating = 5 });
+            await db.SaveChangesAsync();
+            Assert.Equal(3, await db.Reviews.CountAsync());
+            Assert.Equal(2, await db.Reviews.CountAsync(r => r.ServiceAppointmentId == null));
         }
         finally { File.Delete(path); }
     }
