@@ -1,7 +1,8 @@
 # Értékelések backend API
 
 Az értékelés a meglévő `Review` modellen keresztül egy szervizfoglaláshoz tartozik.
-Most csak backend készült; frontendfájlok nem változtak.
+A hozzá kapcsolódó frontend a `/ertekelesek` oldalon érhető el; használata és
+ellenőrzése a [frontend leírásában](../Frontend/REVIEWS.md) található.
 
 ## Üzleti szabályok
 

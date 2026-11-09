@@ -12,6 +12,7 @@ export default function AppHeader() {
       </Link>
 
       <nav className="main-nav" aria-label="Fő navigáció">
+        <NavLink to="/ertekelesek" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Értékelések</NavLink>
         {user ? (
           <>
             <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>Főoldal</NavLink>
