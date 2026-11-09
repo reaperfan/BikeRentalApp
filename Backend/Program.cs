@@ -61,6 +61,7 @@ app.MapAuthEndpoints();
 app.MapBikeEndpoints();
 app.MapRentalEndpoints();
 app.MapServiceAppointmentEndpoints();
+app.MapReviewEndpoints();
 
 app.Run();
 

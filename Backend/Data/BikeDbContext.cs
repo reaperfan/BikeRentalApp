@@ -19,6 +19,11 @@ public class BikeDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Egy szervizfoglaláshoz legfeljebb egy értékelés tartozhat.
+        modelBuilder.Entity<Review>()
+            .HasIndex(r => r.ServiceAppointmentId)
+            .IsUnique();
+
         // Rental - Bike kapcsolat (One-to-Many)
         modelBuilder.Entity<Rental>()
             .HasOne(r => r.Bike)

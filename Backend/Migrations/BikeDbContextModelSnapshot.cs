@@ -102,7 +102,8 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ServiceAppointmentId");
+                    b.HasIndex("ServiceAppointmentId")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
