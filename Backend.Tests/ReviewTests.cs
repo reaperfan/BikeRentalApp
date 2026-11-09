@@ -67,7 +67,7 @@ public sealed class ReviewTests : IDisposable
     }
 
     [Fact]
-    public async Task MultipleReviewsDoNotRequireAServiceOrUniqueAppointment()
+    public async Task MultipleReviewsCanBeSubmittedIndependently()
     {
         var (client, _) = await Customer(); using var owner = client;
         var results = await Task.WhenAll(
@@ -76,7 +76,7 @@ public sealed class ReviewTests : IDisposable
         Assert.All(results, result => Assert.Equal(HttpStatusCode.Created, result.StatusCode));
         Assert.Equal(2, (await client.GetFromJsonAsync<OwnReviewResponse[]>("/api/reviews/mine"))!.Length);
         using var scope = _factory.Services.CreateScope();
-        Assert.All(await scope.ServiceProvider.GetRequiredService<BikeDbContext>().Reviews.ToListAsync(), r => Assert.Null(r.ServiceAppointmentId));
+        Assert.Equal(2, await scope.ServiceProvider.GetRequiredService<BikeDbContext>().Reviews.CountAsync());
     }
 
     [Theory]

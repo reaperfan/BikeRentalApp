@@ -94,20 +94,19 @@ namespace Backend.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ServiceAppointmentId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ServiceAppointmentId")
-                        .IsUnique();
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reviews", t =>
+                        {
+                            t.HasCheckConstraint("CK_Reviews_CommentLength", "\"Comment\" IS NULL OR length(\"Comment\") <= 2000");
+
+                            t.HasCheckConstraint("CK_Reviews_Rating", "\"Rating\" BETWEEN 1 AND 5");
+                        });
                 });
 
             modelBuilder.Entity("Backend.Models.ServiceAppointment", b =>
@@ -194,17 +193,11 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Review", b =>
                 {
-                    b.HasOne("Backend.Models.ServiceAppointment", "ServiceAppointment")
-                        .WithMany()
-                        .HasForeignKey("ServiceAppointmentId");
-
                     b.HasOne("Backend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ServiceAppointment");
 
                     b.Navigation("User");
                 });

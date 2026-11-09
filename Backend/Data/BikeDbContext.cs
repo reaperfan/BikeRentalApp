@@ -19,11 +19,12 @@ public class BikeDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // A korábbi szervizhez kötött értékelések kapcsolatát megőrizzük.
-        // Új értékelésnél a kapcsolat null, ebből több is megengedett.
         modelBuilder.Entity<Review>()
-            .HasIndex(r => r.ServiceAppointmentId)
-            .IsUnique();
+            .ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Reviews_Rating", "\"Rating\" BETWEEN 1 AND 5");
+                table.HasCheckConstraint("CK_Reviews_CommentLength", "\"Comment\" IS NULL OR length(\"Comment\") <= 2000");
+            });
 
         // Rental - Bike kapcsolat (One-to-Many)
         modelBuilder.Entity<Rental>()

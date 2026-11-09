@@ -22,9 +22,6 @@ POST és PUT törzse:
 {"rating": 5, "comment": "Kedves, segítőkész csapat!"}
 ```
 
-A `serviceAppointmentId` nem része az API-nak. Az értékelhető foglalások korábbi
-`/reviewable-appointments` végpontja megszűnt.
-
 A saját értékelés válasza `{ id, rating, comment, createdAt }`; a nyilvános
 válasz ehhez az `authorName` felhasználónevet adja. A nyilvános listában nincs
 felhasználóazonosító, e-mail vagy foglalási adat. Az idők UTC-ben érkeznek.
@@ -45,18 +42,44 @@ Az üzleti hibák `{ "message": "…" }` alakúak.
 
 ## Adatbázis és ellenőrzés
 
-Az `OptionalReviewAppointment` migráció opcionálissá teszi a korábbi
-szervizkapcsolatot. A régi vélemények és kapcsolataik megmaradnak;
-az új értékelések `ServiceAppointmentId` mezője `null`. A korábbi egyedi index
-csak a régi, nem null foglalási hivatkozásokat védi, szerviz nélküli értékelésből
-több is tárolható. Az alkalmazás már nem használja ezt a kapcsolatot.
+A `Reviews` tábla végső szerkezete:
+
+| Mező | Szerep |
+| --- | --- |
+| `Id` | Automatikus elsődleges kulcs |
+| `UserId` | Kötelező szerző, idegen kulcs a `Users` táblára |
+| `Rating` | Kötelező 1–5 pontszám |
+| `Comment` | Opcionális, legfeljebb 2000 karakteres szöveg |
+| `CreatedAt` | A létrehozás UTC-időpontja |
+
+Az `IndependentReviews` migráció eltávolítja a régi szervizoszlopot, idegen kulcsát
+és indexét. A szerző, pontszám, szöveg, dátum és az értékelések azonosítója megmarad.
+A `Users`, `ServiceAppointments`, `Bikes` és `Rentals` táblák adatai változatlanok.
+Szerviz törlése nincs hatással az értékelésekre. Felhasználó törlése csak az ő
+értékeléseit törli, a többi szerző véleményét nem.
+
+Adatbázisszintű CHECK-feltétel is védi az 1–5 pontszámot és a szöveg maximális
+hosszát. A szerző szerinti kereséshez a `UserId` index megmarad.
+A korábbi migrációfájlok történeti sémaleírások: az adatbázis frissítéséhez
+szükségesek, a futó alkalmazás nem használja a régi kapcsolatot.
+
+Fejlesztői (`Development`) módban a backend induláskor automatikusan alkalmazza
+az adatbázis-migrációkat. Így egy korábbi, még kötelező szervizkapcsolatot használó
+adatbázis sem okoz 500-as hibát értékeléskor. A két eredeti, láthatatlan
+szóelválasztót tartalmazó migrációazonosítót is felismeri; táblákat nem hoz létre
+újra a névváltozás miatt. A frissítés hibájánál az alkalmazás indulása megáll,
+a hibát a backend naplója mutatja.
 
 ```sh
-dotnet ef database update --project Backend
+dotnet run --project Backend --launch-profile http
 dotnet test BikeRentalApp.slnx
 ```
 
-A korábbi kötelező kapcsolatot visszaállító downgrade előtt a szerviz nélküli
-véleményeket külön kezelni kell; hozzájuk a rendszer nem talál ki foglalást.
-A tesztek a szerviz nélküli beküldést és a régi adatok megőrzését is ellenőrzik.
+Éles környezetben a migráció továbbra is külön telepítési lépés:
+`dotnet ef database update --project Backend`.
+
+A tesztek friss adatbázison és három korábbi sémaverzióról frissítve is
+ellenőrzik a táblát, az adatmegőrzést, a módosítást és törlést. A downgrade az
+eltávolított kapcsolat eredeti értékeit nem tudja visszaállítani; a korábbi
+rendszerre visszatéréshez az átállás előtti adatbázismentés szükséges.
 A frontend a `/ertekelesek` oldalon található.

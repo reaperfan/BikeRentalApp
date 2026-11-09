@@ -10,10 +10,6 @@ public class Review
     public int UserId { get; set; }
     public User User { get; set; } = null!;
 
-    // Korábbi értékelések kapcsolata; új értékeléshez nem szükséges szerviz.
-    public int? ServiceAppointmentId { get; set; }
-    public ServiceAppointment? ServiceAppointment { get; set; }
-
     [Range(1, 5)]
     public int Rating { get; set; }
 
