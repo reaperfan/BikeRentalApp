@@ -19,6 +19,13 @@ public class BikeDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Review>()
+            .ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Reviews_Rating", "\"Rating\" BETWEEN 1 AND 5");
+                table.HasCheckConstraint("CK_Reviews_CommentLength", "\"Comment\" IS NULL OR length(\"Comment\") <= 2000");
+            });
+
         // Rental - Bike kapcsolat (One-to-Many)
         modelBuilder.Entity<Rental>()
             .HasOne(r => r.Bike)

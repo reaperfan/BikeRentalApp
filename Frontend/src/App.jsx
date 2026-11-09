@@ -8,12 +8,14 @@ import Register from './pages/Register'
 import Szerviz from './pages/Szerviz'
 import BikeCatalog from './pages/BikeCatalog'
 import BikeRental from './pages/BikeRental'
+import Reviews from './pages/Reviews'
 
 export default function App() {
   return (
     <>
       <AppHeader />
       <Routes>
+        <Route path="/ertekelesek" element={<Reviews />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
