@@ -42,7 +42,7 @@ export default function BikeCatalog() {
   return (
     <div className="bike-catalog">
       <div className="catalog-container">
-        <h1>Bicikli Katalógus</h1>
+        <h1>Bicikli bérlés</h1>
 
         <div className="filters">
           <div className="filter-group">
