@@ -1,16 +1,43 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Backend.Dtos;
 
 namespace Backend.Tests;
 
-public class RentalTests : IClassFixture<AuthApiFactory>
+public class RentalTests : IClassFixture<AuthApiFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client;
 
     public RentalTests(AuthApiFactory factory)
     {
         _client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+    }
+
+    // A foglaláshoz bejelentkezés kell, ezért minden teszt egy friss vevő fiók tokenjével fut
+    public async Task InitializeAsync()
+    {
+        var email = $"rental-{Guid.NewGuid():N}@test.com";
+        var register = await _client.PostAsJsonAsync("/api/auth/register", new UserRegisterDto("Bérlő", email, "Password123!"));
+        Assert.Equal(HttpStatusCode.OK, register.StatusCode);
+
+        var login = await _client.PostAsJsonAsync("/api/auth/login", new UserLoginDto(email, "Password123!"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var token = (await login.Content.ReadFromJsonAsync<LoginResponseDto>())!.AccessToken;
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task CreateRental_WithoutToken_ReturnsUnauthorized()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+        var now = DateTime.UtcNow;
+        var rental = new RentalDtoCreate(4, "Anonymous", "anon@example.com", now.AddDays(60), now.AddDays(61));
+
+        var res = await _client.PostAsJsonAsync("/api/rentals", rental);
+        Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
     }
 
     [Fact]
@@ -208,10 +235,10 @@ public class RentalTests : IClassFixture<AuthApiFactory>
         req.Content = JsonContent.Create(rentalJson);
 
         var res = await _client.SendAsync(req);
-        // JSON nem validálódik az email alapján, a modell ezt nem ellenőrzi
-        // Az email csak string, a DTO attributuma pedig [EmailAddress]
-        // A Minimal API nem automatikus modell validációt végez
-        Assert.True(res.StatusCode == HttpStatusCode.BadRequest || res.StatusCode == HttpStatusCode.Created);
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+
+        var error = await res.Content.ReadAsStringAsync();
+        Assert.Contains("email", error.ToLower());
     }
 
     [Fact]

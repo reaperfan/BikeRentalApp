@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Backend.Data;
 using Backend.Dtos;
 using Backend.Models;
@@ -85,6 +86,13 @@ public static class RentalEndpoints {
 
         // Új kölcsönzés létrehozása (POST) - csak bejelentkezett felhasználó
         group.MapPost("/", async (RentalDtoCreate dto, BikeDbContext db) => {
+            // A DTO attribútumait a Minimal API nem ellenőrzi, ezért itt validálunk
+            if (string.IsNullOrWhiteSpace(dto.CustomerName))
+                return Results.BadRequest(new { message = "Az ügyfél neve kötelező." });
+
+            if (!new EmailAddressAttribute().IsValid(dto.CustomerEmail))
+                return Results.BadRequest(new { message = "Érvénytelen email cím." });
+
             // Bicikli létezésének ellenőrzése
             var bike = await db.Bikes.FirstOrDefaultAsync(b => b.Id == dto.BikeId);
             if (bike == null)
