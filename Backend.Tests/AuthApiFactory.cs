@@ -13,6 +13,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
     public const string Audience = "BikeRental.Client";
 
     private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"bikerental-test-{Guid.NewGuid()}.db");
+    public string UploadsPath { get; } = Path.Combine(Path.GetTempPath(), $"bikerental-test-uploads-{Guid.NewGuid()}");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -22,6 +23,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Issuer", Issuer);
         builder.UseSetting("Jwt:Audience", Audience);
         builder.UseSetting("Jwt:ExpiryMinutes", "60");
+        builder.UseSetting("Uploads:Path", UploadsPath);
     }
 
     protected override void ConfigureClient(HttpClient client)
@@ -111,5 +113,6 @@ public class AuthApiFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         File.Delete(_dbPath);
+        if (Directory.Exists(UploadsPath)) Directory.Delete(UploadsPath, recursive: true);
     }
 }

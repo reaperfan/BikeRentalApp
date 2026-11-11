@@ -37,6 +37,14 @@ button.admin-stat:hover { transform: translateY(-2px); box-shadow: 0 9px 20px #1
 .admin-form input:focus, .admin-form select:focus, .admin-filters input:focus, .admin-filters select:focus, .admin-heading-tools input:focus { outline: 2px solid var(--green); outline-offset: 2px; }
 .admin-form-wide { grid-column: 1 / 3; }
 .admin-form label small { color: var(--muted); font-weight: 400; }
+.admin-image-field { display: flex; flex-direction: column; gap: 10px; min-width: 0; font-size: .85rem; font-weight: 600; }
+.admin-image-field > label { font-weight: 500; color: var(--muted); }
+.admin-image-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.admin-image-picker small { color: var(--muted); font-weight: 400; }
+.admin-form .admin-file-button { position: relative; flex-direction: row; align-items: center; cursor: pointer; }
+.admin-file-button:has(input:disabled) { opacity: .6; cursor: progress; }
+.admin-file-button:focus-within { outline: 3px solid #f1a93e; outline-offset: 3px; }
+.admin-file-button input { position: absolute; inset: 0; opacity: 0; cursor: inherit; }
 .admin-check { flex-direction: row !important; align-items: center; align-self: end; min-height: 46px; }
 .admin-check input { width: 18px; height: 18px; accent-color: var(--green); }
 .admin-bike-preview { position: absolute; top: 22px; right: 26px; width: 92px; height: 62px; object-fit: cover; border-radius: 10px; }

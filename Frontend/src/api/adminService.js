@@ -19,6 +19,13 @@ export const createBike = (bike) => api('/bikes', { method: 'POST', body: bike }
 export const updateBike = (id, bike) => api(`/bikes/${id}`, { method: 'PUT', body: bike })
 export const deleteBike = (id) => api(`/bikes/${id}`, { method: 'DELETE' })
 
+// Visszaadja a feltöltött kép URL-jét ({ url })
+export function uploadBikeImage(file) {
+  const form = new FormData()
+  form.append('file', file)
+  return api('/admin/bike-images', { method: 'POST', body: form })
+}
+
 export const getServiceAppointments = (from, to) => api(`/service-appointments/admin?from=${from}&to=${to}`)
 export const updateServiceStatus = (id, status) =>
   api(`/service-appointments/admin/${id}/status`, { method: 'PATCH', body: { status } })

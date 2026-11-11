@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using Backend.Data;
 using Backend.Dtos;
 using Backend.Models;
+using Backend.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -233,6 +234,69 @@ public class AdminTests : IClassFixture<AuthApiFactory>
         await AdminSeeder.SeedAsync(db, config);
         await db.Entry(customer).ReloadAsync();
         Assert.Equal("Admin", customer.Role);
+    }
+
+    private static readonly byte[] PngBytes = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+
+    private async Task<HttpResponseMessage> Upload(string? token, byte[] content, string fileName, string contentType = "image/png")
+    {
+        var file = new ByteArrayContent(content);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        var form = new MultipartFormDataContent { { file, "file", fileName } };
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/admin/bike-images") { Content = form };
+        if (token != null) req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return await _client.SendAsync(req);
+    }
+
+    private record UploadResponse(string Url);
+
+    [Fact]
+    public async Task UploadBikeImage_AsAdmin_SavesAndServesImage()
+    {
+        var res = await Upload(await AdminToken(), PngBytes, "bringa.png");
+
+        Assert.Equal(HttpStatusCode.Created, res.StatusCode);
+        var url = (await res.Content.ReadFromJsonAsync<UploadResponse>())!.Url;
+        Assert.Matches("^/uploads/bikes/[0-9a-f]{32}\\.png$", url);
+        Assert.True(File.Exists(Path.Combine(_factory.UploadsPath, "bikes", Path.GetFileName(url))));
+
+        // Bejelentkezés nélkül is letölthető, mert a katalógus mutatja
+        var image = await _client.GetAsync(url);
+        Assert.Equal(HttpStatusCode.OK, image.StatusCode);
+        Assert.Equal(PngBytes, await image.Content.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public async Task UploadBikeImage_ExtensionComesFromContent_NotFileName()
+    {
+        var res = await Upload(await AdminToken(), PngBytes, "kep.jpg", "image/jpeg");
+        var url = (await res.Content.ReadFromJsonAsync<UploadResponse>())!.Url;
+        Assert.EndsWith(".png", url);
+    }
+
+    [Fact]
+    public async Task UploadBikeImage_NotAnImage_Returns400()
+    {
+        var res = await Upload(await AdminToken(), "<script>alert(1)</script>"u8.ToArray(), "kep.png");
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadBikeImage_TooLarge_Returns400()
+    {
+        var big = new byte[UploadStorage.MaxImageBytes + 1];
+        PngBytes.CopyTo(big, 0);
+        var res = await Upload(await AdminToken(), big, "nagy.png");
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadBikeImage_AsCustomer_Returns403()
+    {
+        var (token, _) = await CustomerToken();
+        Assert.Equal(HttpStatusCode.Forbidden, (await Upload(token, PngBytes, "kep.png")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Upload(null, PngBytes, "kep.png")).StatusCode);
     }
 
     [Fact]

@@ -24,10 +24,12 @@ export class ApiError extends Error {
   }
 }
 
-// fetch wrapper: JSON body, Bearer token, egységes hibakezelés
+// fetch wrapper: JSON vagy FormData body, Bearer token, egységes hibakezelés
 export async function api(path, { method = 'GET', body, auth = true } = {}) {
   const headers = {}
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // FormData-nál a böngésző állítja be a multipart Content-Type-ot
+  const isForm = body instanceof FormData
+  if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
 
   const token = getToken()
   if (auth && token) headers.Authorization = `Bearer ${token}`
@@ -37,7 +39,7 @@ export async function api(path, { method = 'GET', body, auth = true } = {}) {
     res = await fetch(`/api${path}`, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined || isForm ? body : JSON.stringify(body),
     })
   } catch {
     throw new ApiError(0, 'A szerver nem érhető el.')

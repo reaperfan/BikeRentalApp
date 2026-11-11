@@ -21,6 +21,11 @@ builder.Services.AddOptions<Backend.Services.ServiceSchedule>()
     .Validate(s => TimeZoneInfo.TryFindSystemTimeZoneById(s.TimeZoneId, out _), "Érvénytelen időzóna.")
     .ValidateOnStart();
 
+// Feltöltött képek (bicikli fotók)
+var uploads = new Backend.Services.UploadStorage(
+    builder.Configuration["Uploads:Path"] ?? Path.Combine(builder.Environment.ContentRootPath, "uploads"));
+builder.Services.AddSingleton(uploads);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -59,6 +64,13 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+// A feltöltött képek bejelentkezés nélkül is elérhetők (a katalógus mutatja őket)
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploads.RootPath),
+    RequestPath = Backend.Services.UploadStorage.RequestPath
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

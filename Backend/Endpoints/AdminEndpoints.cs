@@ -3,6 +3,7 @@ using Backend.Auth;
 using Backend.Data;
 using Backend.Dtos;
 using Backend.Models;
+using Backend.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -82,6 +83,28 @@ public static class AdminEndpoints
             var rentals = await query.OrderByDescending(r => r.StartDate).ToListAsync(ct);
             return Results.Ok(rentals.Select(Response));
         }).WithName("GetAdminRentals");
+
+        // Bicikli kép feltöltése (multipart/form-data, "file" mező); a válasz URL-je mehet az ImageUrl-be
+        group.MapPost("/bike-images", async (IFormFile? file, UploadStorage storage, CancellationToken ct) =>
+        {
+            if (file == null || file.Length == 0)
+                return Results.BadRequest(new { message = "Válassz ki egy képfájlt." });
+            if (file.Length > UploadStorage.MaxImageBytes)
+                return Results.BadRequest(new { message = "A kép legfeljebb 5 MB lehet." });
+
+            await using var stream = file.OpenReadStream();
+            var header = new byte[12];
+            var read = await stream.ReadAtLeastAsync(header, header.Length, throwOnEndOfStream: false, ct);
+            if (UploadStorage.DetectImageExtension(header.AsSpan(0, read)) is not string extension)
+                return Results.BadRequest(new { message = "Csak JPG, PNG vagy WEBP kép tölthető fel." });
+
+            stream.Position = 0;
+            var url = await storage.SaveBikeImageAsync(stream, extension, ct);
+            return Results.Created(url, new { url });
+        })
+        // JWT-vel hitelesítünk, nincs cookie, így az antiforgery token nem szükséges
+        .DisableAntiforgery()
+        .WithName("UploadBikeImage");
 
         group.MapDelete("/rentals/{id:int}", async (int id, BikeDbContext db, CancellationToken ct) =>
         {

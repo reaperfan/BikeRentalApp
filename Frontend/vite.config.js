@@ -13,6 +13,8 @@ export default defineConfig({
     // A backend felé továbbítja az /api kéréseket, így nem kell CORS
     proxy: {
       '/api': 'http://localhost:5006',
+      // Admin által feltöltött bicikli képek
+      '/uploads': 'http://localhost:5006',
     },
   },
 })

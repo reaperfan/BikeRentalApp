@@ -1,11 +1,13 @@
 import { useCallback, useState } from 'react'
-import { createBike, deleteBike, updateBike } from '../../api/adminService'
+import { createBike, deleteBike, updateBike, uploadBikeImage } from '../../api/adminService'
 import { getBikes } from '../../api/bikeService'
 import useAdminResource from '../../hooks/useAdminResource'
 import Failure from './Failure'
 import { bikeTypeLabel, bikeTypes, money } from './format'
 
-const empty = { name: '', type: 0, dailyPrice: '', imageUrl: '/images/bikes/', isAvailable: true }
+const empty = { name: '', type: 0, dailyPrice: '', imageUrl: '', isAvailable: true }
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 export default function AdminBikes() {
   const load = useCallback(() => getBikes(), [])
@@ -14,6 +16,7 @@ export default function AdminBikes() {
   const [editingId, setEditingId] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -51,6 +54,28 @@ export default function AdminBikes() {
     }
   }
 
+  async function pickImage(event) {
+    const file = event.target.files[0]
+    event.target.value = ''
+    if (!file) return
+    setError('')
+    setMessage('')
+    // Gyors ellenőrzés a böngészőben; a backend a tartalmat is megvizsgálja
+    if (!IMAGE_TYPES.includes(file.type)) return setError('Csak JPG, PNG vagy WEBP kép tölthető fel.')
+    if (file.size > MAX_IMAGE_BYTES) return setError('A kép legfeljebb 5 MB lehet.')
+
+    setUploading(true)
+    try {
+      const { url } = await uploadBikeImage(file)
+      setForm((f) => ({ ...f, imageUrl: url }))
+      setMessage(`${file.name} feltöltve.`)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   async function submit(event) {
     event.preventDefault()
     if (!valid || busy) return
@@ -77,7 +102,7 @@ export default function AdminBikes() {
 
       <form className="admin-form" id="admin-bike-form" onSubmit={submit}>
         <h2>{editingId ? `Bicikli módosítása (#${editingId})` : 'Új bicikli felvétele'}</h2>
-        <fieldset disabled={busy}>
+        <fieldset disabled={busy || uploading}>
           <label>Név<input required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Pl. Trek Marlin 7" /></label>
           <label>Típus
             <select value={form.type} onChange={(e) => setForm({ ...form, type: Number(e.target.value) })}>
@@ -85,16 +110,25 @@ export default function AdminBikes() {
             </select>
           </label>
           <label>Napidíj (Ft)<input required type="number" min="1" step="1" inputMode="numeric" value={form.dailyPrice} onChange={(e) => setForm({ ...form, dailyPrice: e.target.value })} placeholder="Pl. 6500" /></label>
-          <label className="admin-form-wide">Kép elérési útja
-            <input required list="admin-bike-images" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+          <div className="admin-form-wide admin-image-field">
+            <span>Kép</span>
+            <div className="admin-image-picker">
+              <label className="button-secondary admin-file-button">
+                {uploading ? 'Feltöltés…' : 'Kép tallózása…'}
+                <input type="file" accept={IMAGE_TYPES.join(',')} disabled={uploading} onChange={pickImage} />
+              </label>
+              <small>JPG, PNG vagy WEBP, legfeljebb 5 MB.</small>
+            </div>
+            <label>vagy meglévő kép útvonala
+              <input required list="admin-bike-images" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+            </label>
             <datalist id="admin-bike-images">{images.map((src) => <option key={src} value={src} />)}</datalist>
-            <small>A képfájlnak a <code>Frontend/public/images/bikes</code> mappában kell lennie.</small>
-          </label>
+          </div>
           {editingId && <label className="admin-check"><input type="checkbox" checked={form.isAvailable} onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })} /> Elérhető kölcsönzésre</label>}
         </fieldset>
         {form.imageUrl.trim() && <img className="admin-bike-preview" src={form.imageUrl} alt="Kép előnézet" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} onLoad={(e) => { e.currentTarget.style.visibility = 'visible' }} />}
         <div className="admin-form-actions">
-          <button className="button-primary" type="submit" disabled={busy || !valid}>{busy ? 'Mentés…' : editingId ? 'Módosítás mentése' : 'Bicikli felvétele'} <span aria-hidden="true">→</span></button>
+          <button className="button-primary" type="submit" disabled={busy || uploading || !valid}>{busy ? 'Mentés…' : editingId ? 'Módosítás mentése' : 'Bicikli felvétele'} <span aria-hidden="true">→</span></button>
           {editingId && <button className="button-secondary" type="button" disabled={busy} onClick={reset}>Mégsem</button>}
         </div>
       </form>

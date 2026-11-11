@@ -16,6 +16,7 @@ vi.mock('../api/adminService', () => ({
   createBike: vi.fn(),
   updateBike: vi.fn(),
   deleteBike: vi.fn(),
+  uploadBikeImage: vi.fn(),
   getServiceAppointments: vi.fn(),
   updateServiceStatus: vi.fn()
 }))
@@ -85,13 +86,44 @@ describe('Admin', () => {
     fireEvent.change(screen.getByLabelText('Név'), { target: { value: '  Cube Test  ' } })
     fireEvent.change(screen.getByLabelText('Típus'), { target: { value: '3' } })
     fireEvent.change(screen.getByLabelText('Napidíj (Ft)'), { target: { value: '12000' } })
-    fireEvent.change(screen.getByLabelText(/Kép elérési útja/), { target: { value: '/images/bikes/x.jpg' } })
+    fireEvent.change(screen.getByLabelText(/meglévő kép útvonala/), { target: { value: '/images/bikes/x.jpg' } })
     fireEvent.click(screen.getByRole('button', { name: /Bicikli felvétele/ }))
 
     await waitFor(() => expect(adminService.createBike).toHaveBeenCalledWith(
       { name: 'Cube Test', type: 3, dailyPrice: 12000, imageUrl: '/images/bikes/x.jpg' }))
     expect(await screen.findByText('Új bicikli felvéve.')).toBeInTheDocument()
     expect(getBikes).toHaveBeenCalledTimes(2)
+  })
+
+  it('uploads a browsed image and uses its url for the new bike', async () => {
+    adminService.uploadBikeImage.mockResolvedValue({ url: '/uploads/bikes/abc.png' })
+    adminService.createBike.mockResolvedValue({})
+    renderAdmin('/admin?tab=bikes')
+    await screen.findByText('Trek Marlin 7')
+
+    const file = new File(['png'], 'bringa.png', { type: 'image/png' })
+    fireEvent.change(screen.getByLabelText('Kép tallózása…'), { target: { files: [file] } })
+
+    expect(await screen.findByText('bringa.png feltöltve.')).toBeInTheDocument()
+    expect(adminService.uploadBikeImage).toHaveBeenCalledWith(file)
+    expect(screen.getByLabelText(/meglévő kép útvonala/)).toHaveValue('/uploads/bikes/abc.png')
+
+    fireEvent.change(screen.getByLabelText('Név'), { target: { value: 'Új bringa' } })
+    fireEvent.change(screen.getByLabelText('Napidíj (Ft)'), { target: { value: '5000' } })
+    fireEvent.click(screen.getByRole('button', { name: /Bicikli felvétele/ }))
+    await waitFor(() => expect(adminService.createBike).toHaveBeenCalledWith(
+      { name: 'Új bringa', type: 0, dailyPrice: 5000, imageUrl: '/uploads/bikes/abc.png' }))
+  })
+
+  it('rejects non-image files before uploading', async () => {
+    renderAdmin('/admin?tab=bikes')
+    await screen.findByText('Trek Marlin 7')
+
+    const file = new File(['x'], 'doksi.pdf', { type: 'application/pdf' })
+    fireEvent.change(screen.getByLabelText('Kép tallózása…'), { target: { files: [file] } })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Csak JPG, PNG vagy WEBP')
+    expect(adminService.uploadBikeImage).not.toHaveBeenCalled()
   })
 
   it('toggles bike availability with the full bike payload', async () => {
