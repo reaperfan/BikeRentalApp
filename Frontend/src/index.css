@@ -141,6 +141,8 @@ button, a, input { -webkit-tap-highlight-color: transparent; }
   .auth-layout { gap: 32px; grid-template-columns: 0.85fr 1.15fr; }
   .auth-showcase { min-height: 530px; padding: 27px; }
   .showcase-message h1 { font-size: 3.5rem; }
+  .site-header { flex-wrap: wrap; padding-block: 12px; }
+  .main-nav { flex-wrap: wrap; }
 }
 
 @media (max-width: 680px) {

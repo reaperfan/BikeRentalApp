@@ -10,6 +10,8 @@ import BikeCatalog from './pages/BikeCatalog'
 import BikeRental from './pages/BikeRental'
 import RentalCart from './pages/RentalCart'
 import Reviews from './pages/Reviews'
+import AdminRoute from './auth/AdminRoute'
+import Admin from './pages/Admin'
 
 export default function App() {
   return (
@@ -25,6 +27,7 @@ export default function App() {
         <Route path="/catalog" element={<BikeCatalog />} />
         <Route path="/rental/:bikeId" element={<BikeRental />} />
         <Route path="/cart" element={<ProtectedRoute><RentalCart /></ProtectedRoute>} />
+        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
