@@ -1,0 +1,58 @@
+.catalog-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.catalog-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalog-calendar {
+  width: 340px;
+  position: sticky;
+  top: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.catalog-calendar h2 {
+  margin: 0 0 16px;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+.calendar-note {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+}
+
+.bike-card {
+  cursor: pointer;
+}
+
+.bike-card.selected {
+  outline: 3px solid #28a745;
+  box-shadow: 0 0 12px rgba(40, 167, 69, 0.4);
+}
+
+.btn-rental:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .catalog-layout {
+    flex-direction: column;
+  }
+
+  .catalog-calendar {
+    width: 100%;
+    position: static;
+  }
+}

@@ -17,8 +17,7 @@ export async function getBikeById(id) {
 export async function createRental(rentalData) {
   return api('/rentals', {
     method: 'POST',
-    body: rentalData,
-    auth: false
+    body: rentalData
   })
 }
 

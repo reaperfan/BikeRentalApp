@@ -8,6 +8,7 @@ import Register from './pages/Register'
 import Szerviz from './pages/Szerviz'
 import BikeCatalog from './pages/BikeCatalog'
 import BikeRental from './pages/BikeRental'
+import RentalCart from './pages/RentalCart'
 import Reviews from './pages/Reviews'
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/szerviz" element={<ProtectedRoute><Szerviz /></ProtectedRoute>} />
         <Route path="/catalog" element={<BikeCatalog />} />
         <Route path="/rental/:bikeId" element={<BikeRental />} />
+        <Route path="/cart" element={<ProtectedRoute><RentalCart /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
-export default function BikeCard({ bike }) {
-  const navigate = useNavigate()
+export default function BikeCard({ bike, canAddToCart, onAddToCart }) {
   const [imageError, setImageError] = useState(false)
 
   const bikeTypeNames = {
@@ -13,8 +11,9 @@ export default function BikeCard({ bike }) {
     4: 'Gyerek'
   }
 
-  const handleRental = () => {
-    navigate(`/rental/${bike.id}`)
+  function handleAddClick(e) {
+    e.stopPropagation()
+    onAddToCart()
   }
 
   return (
@@ -43,11 +42,16 @@ export default function BikeCard({ bike }) {
         <p className="bike-price">{bike.dailyPrice.toLocaleString('hu-HU')} Ft/nap</p>
 
         {bike.isAvailable ? (
-          <button className="btn-rental" onClick={handleRental}>
-            Kölcsönzés
+          <button
+            type="button"
+            className="btn-rental"
+            onClick={handleAddClick}
+            disabled={!canAddToCart}
+          >
+            Kosárba
           </button>
         ) : (
-          <button className="btn-unavailable" disabled>
+          <button type="button" className="btn-unavailable" disabled>
             Nem elérhető
           </button>
         )}

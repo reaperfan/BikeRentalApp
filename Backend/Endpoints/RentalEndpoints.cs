@@ -5,15 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Endpoints;
 
-public static class RentalEndpoints
-{
-    public static void MapRentalEndpoints(this IEndpointRouteBuilder routes)
-    {
-        var group = routes.MapGroup("/api/rentals").WithTags("Rentals").AllowAnonymous();
+public static class RentalEndpoints {
+    public static void MapRentalEndpoints(this IEndpointRouteBuilder routes) {
+        var group = routes.MapGroup("/api/rentals").WithTags("Rentals");
 
         // Összes kölcsönzés listája
-        group.MapGet("/", async (BikeDbContext db) =>
-        {
+        group.MapGet("/", async (BikeDbContext db) => {
             var rentals = await db.Rentals
                 .AsNoTracking()
                 .Include(r => r.Bike)
@@ -30,13 +27,13 @@ public static class RentalEndpoints
                 r.CreatedAt
             )));
         })
+        .AllowAnonymous()
         .WithName("GetRentals")
         .WithOpenApi()
         .Produces(StatusCodes.Status200OK);
 
         // Konkrét kölcsönzés lekérdezése ID alapján
-        group.MapGet("/{id}", async (int id, BikeDbContext db) =>
-        {
+        group.MapGet("/{id}", async (int id, BikeDbContext db) => {
             var rental = await db.Rentals
                 .AsNoTracking()
                 .Include(r => r.Bike)
@@ -56,14 +53,14 @@ public static class RentalEndpoints
                 rental.CreatedAt
             ));
         })
+        .AllowAnonymous()
         .WithName("GetRentalById")
         .WithOpenApi()
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
         // Kölcsönzés szűrése bicikli ID szerint
-        group.MapGet("/bike/{bikeId}", async (int bikeId, BikeDbContext db) =>
-        {
+        group.MapGet("/bike/{bikeId}", async (int bikeId, BikeDbContext db) => {
             var rentals = await db.Rentals
                 .AsNoTracking()
                 .Where(r => r.BikeId == bikeId)
@@ -81,13 +78,13 @@ public static class RentalEndpoints
                 r.CreatedAt
             )));
         })
+        .AllowAnonymous()
         .WithName("GetRentalsByBike")
         .WithOpenApi()
         .Produces(StatusCodes.Status200OK);
 
-        // Új kölcsönzés létrehozása (POST)
-        group.MapPost("/", async (RentalDtoCreate dto, BikeDbContext db) =>
-        {
+        // Új kölcsönzés létrehozása (POST) - csak bejelentkezett felhasználó
+        group.MapPost("/", async (RentalDtoCreate dto, BikeDbContext db) => {
             // Bicikli létezésének ellenőrzése
             var bike = await db.Bikes.FirstOrDefaultAsync(b => b.Id == dto.BikeId);
             if (bike == null)
@@ -110,8 +107,7 @@ public static class RentalEndpoints
             if (conflict)
                 return Results.BadRequest(new { message = "Az adott bicikli már foglalt ebben az időszakban." });
 
-            var rental = new Rental
-            {
+            var rental = new Rental {
                 BikeId = dto.BikeId,
                 CustomerName = dto.CustomerName,
                 CustomerEmail = dto.CustomerEmail,
@@ -134,14 +130,15 @@ public static class RentalEndpoints
                 rental.CreatedAt
             ));
         })
+        .RequireAuthorization()
         .WithName("CreateRental")
         .WithOpenApi()
         .Produces(StatusCodes.Status201Created)
-        .Produces(StatusCodes.Status400BadRequest);
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status401Unauthorized);
 
         // Kölcsönzés módosítása (PUT)
-        group.MapPut("/{id}", async (int id, RentalDtoUpdate dto, BikeDbContext db) =>
-        {
+        group.MapPut("/{id}", async (int id, RentalDtoUpdate dto, BikeDbContext db) => {
             var rental = await db.Rentals
                 .Include(r => r.Bike)
                 .FirstOrDefaultAsync(r => r.Id == id);
@@ -180,6 +177,7 @@ public static class RentalEndpoints
                 rental.CreatedAt
             ));
         })
+        .AllowAnonymous()
         .WithName("UpdateRental")
         .WithOpenApi()
         .Produces(StatusCodes.Status200OK)
@@ -187,8 +185,7 @@ public static class RentalEndpoints
         .Produces(StatusCodes.Status400BadRequest);
 
         // Kölcsönzés törlése (DELETE)
-        group.MapDelete("/{id}", async (int id, BikeDbContext db) =>
-        {
+        group.MapDelete("/{id}", async (int id, BikeDbContext db) => {
             var rental = await db.Rentals.FirstOrDefaultAsync(r => r.Id == id);
             if (rental == null)
                 return Results.NotFound(new { message = "Kölcsönzés nem található." });
@@ -198,6 +195,7 @@ public static class RentalEndpoints
 
             return Results.NoContent();
         })
+        .AllowAnonymous()
         .WithName("DeleteRental")
         .WithOpenApi()
         .Produces(StatusCodes.Status204NoContent)
