@@ -26,7 +26,7 @@ public static class AuthEndpoints
                 Username = dto.Username,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = "Customer"
+                Role = AuthConstants.CustomerRole
             };
 
             db.Users.Add(user);

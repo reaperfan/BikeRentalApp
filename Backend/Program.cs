@@ -44,7 +44,9 @@ if (app.Environment.IsDevelopment())
     // A fejlesztői adatbázis sémája induláskor követi a letöltött kódot.
     // A szükséges migráció nélkül az új, foglalás nélküli értékelés 500-at adna.
     await using var scope = app.Services.CreateAsyncScope();
-    await DevelopmentDatabase.InitializeAsync(scope.ServiceProvider.GetRequiredService<BikeDbContext>());
+    var db = scope.ServiceProvider.GetRequiredService<BikeDbContext>();
+    await DevelopmentDatabase.InitializeAsync(db);
+    await AdminSeeder.SeedAsync(db, app.Configuration);
 
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -67,6 +69,7 @@ app.MapBikeEndpoints();
 app.MapRentalEndpoints();
 app.MapServiceAppointmentEndpoints();
 app.MapReviewEndpoints();
+app.MapAdminEndpoints();
 
 app.Run();
 

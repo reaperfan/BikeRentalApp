@@ -8,6 +8,15 @@ namespace Backend.Endpoints;
 
 public static class BikeEndpoints
 {
+    // A DTO-k DataAnnotations attribútumait a Minimal API nem ellenőrzi, ezért itt validálunk.
+    private static IResult? Validate(string name, BikeType type, decimal dailyPrice, string imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 100 || !Enum.IsDefined(type) ||
+            dailyPrice is <= 0 or > 999999.99m || string.IsNullOrWhiteSpace(imageUrl))
+            return Results.BadRequest(new { message = "A név (max. 100 karakter), a típus, a pozitív napidíj és a kép elérési útja kötelező." });
+        return null;
+    }
+
     public static void MapBikeEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api/bikes").WithTags("Bikes").AllowAnonymous();
@@ -51,9 +60,12 @@ public static class BikeEndpoints
         // Új bicikli létrehozása (POST)
         adminGroup.MapPost("/", async (BikeDtoCreateUpdate dto, BikeDbContext db) =>
         {
+            if (Validate(dto.Name, dto.Type, dto.DailyPrice, dto.ImageUrl) is { } invalid)
+                return invalid;
+
             var bike = new Bike
             {
-                Name = dto.Name,
+                Name = dto.Name.Trim(),
                 Type = dto.Type,
                 DailyPrice = dto.DailyPrice,
                 ImageUrl = dto.ImageUrl,
@@ -74,11 +86,14 @@ public static class BikeEndpoints
         // Bicikli módosítása (PUT)
         adminGroup.MapPut("/{id}", async (int id, BikeDtoUpdateFull dto, BikeDbContext db) =>
         {
+            if (Validate(dto.Name, dto.Type, dto.DailyPrice, dto.ImageUrl) is { } invalid)
+                return invalid;
+
             var bike = await db.Bikes.FirstOrDefaultAsync(b => b.Id == id);
             if (bike == null)
                 return Results.NotFound(new { message = "Bicikli nem található." });
 
-            bike.Name = dto.Name;
+            bike.Name = dto.Name.Trim();
             bike.Type = dto.Type;
             bike.DailyPrice = dto.DailyPrice;
             bike.ImageUrl = dto.ImageUrl;
@@ -102,6 +117,10 @@ public static class BikeEndpoints
             if (bike == null)
                 return Results.NotFound(new { message = "Bicikli nem található." });
 
+            // A kölcsönzések Restrict kapcsolattal hivatkoznak rá, törlés helyett elérhetetlenné kell tenni.
+            if (await db.Rentals.AnyAsync(r => r.BikeId == id))
+                return Results.Conflict(new { message = "A biciklihez kölcsönzés tartozik, nem törölhető. Állítsd nem elérhetőre." });
+
             db.Bikes.Remove(bike);
             await db.SaveChangesAsync();
 
@@ -110,6 +129,7 @@ public static class BikeEndpoints
         .WithName("DeleteBike")
         .WithOpenApi()
         .Produces(StatusCodes.Status204NoContent)
-        .Produces(StatusCodes.Status404NotFound);
+        .Produces(StatusCodes.Status404NotFound)
+        .Produces(StatusCodes.Status409Conflict);
     }
 }
