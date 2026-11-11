@@ -103,7 +103,7 @@ npm run lint
 npm run build
 ```
 
-A CI (GitHub Actions) minden PR-nél lefuttatja mindkettőt.
+A CI (GitHub Actions) minden pushnál és PR-nél lefuttatja mindkettőt.
 
 ## Projekt szerkezet
 
@@ -118,4 +118,13 @@ Backend/          ASP.NET Core API
   Services/       Üzleti logika
 Backend.Tests/    xUnit integrációs tesztek
 Frontend/         React + Vite kliens
+Doc/              Projektdokumentáció
 ```
+
+## Dokumentáció
+
+- [Bemutató összefoglaló](Doc/Bemutato_osszefoglalo.md)
+- [Követelményspecifikáció](Doc/Kovetelmeny_specifikacio.md)
+- [Funkcionális specifikáció](Doc/Funkcionalis_specifikacio.md)
+- [Rendszerterv](Doc/Rendszerterv.md)
+- [Tesztjegyzőkönyvek](Doc/Teszt%20jegyz%C5%91k%C3%B6nyvek)
