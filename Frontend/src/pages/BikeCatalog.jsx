@@ -119,8 +119,8 @@ export default function BikeCatalog() {
           </div>
         </div>
 
-        {message && <div className="success-message">{message}</div>}
-        {error && <div className="error-message">Hiba: {error}</div>}
+        {message && <div className="alert success">{message}</div>}
+        {error && <div className="alert error">Hiba: {error}</div>}
 
         <div className="catalog-layout">
           <div className="catalog-main">

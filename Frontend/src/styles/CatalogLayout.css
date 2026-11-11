@@ -10,40 +10,27 @@
 }
 
 .catalog-calendar {
-  width: 340px;
   position: sticky;
-  top: 20px;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  top: 24px;
+  width: 340px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow: 0 12px 35px #27372a0a;
 }
 
 .catalog-calendar h2 {
-  margin: 0 0 16px;
-  font-size: 1.3rem;
-  color: #333;
+  margin: 0 0 14px;
+  font-family: 'Trebuchet MS', system-ui, sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: -0.04em;
 }
 
 .calendar-note {
-  margin-top: 12px;
+  margin: 0 0 14px;
+  color: var(--muted);
   font-size: 0.85rem;
-  color: #666;
-  text-align: center;
-}
-
-.bike-card {
-  cursor: pointer;
-}
-
-.bike-card.selected {
-  outline: 3px solid #28a745;
-  box-shadow: 0 0 12px rgba(40, 167, 69, 0.4);
-}
-
-.btn-rental:disabled {
-  background: #adb5bd;
-  cursor: not-allowed;
 }
 
 @media (max-width: 900px) {
@@ -52,7 +39,7 @@
   }
 
   .catalog-calendar {
-    width: 100%;
     position: static;
+    width: 100%;
   }
 }

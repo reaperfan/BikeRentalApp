@@ -55,12 +55,12 @@ export default function RentalCart() {
         <h1>Kosár</h1>
 
         {success && (
-          <div className="success-message">
+          <div className="alert success">
             ✓ Foglalás sikeresen létrehozva! Átirányítás...
           </div>
         )}
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="alert error">{error}</div>}
 
         {items.length === 0 ? (
           <div className="cart-empty">
