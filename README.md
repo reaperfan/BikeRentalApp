@@ -21,16 +21,9 @@ A kulcs **nincs a repóban**. Hozd létre a `Backend/appsettings.Development.jso
 {
   "Jwt": {
     "Key": "ide-egy-legalabb-32-karakteres-veletlen-szoveg"
-  },
-  "Admin": {
-    "Email": "admin@bikerental.local",
-    "Username": "Admin",
-    "Password": "valassz-egy-jelszot"
   }
 }
 ```
-
-Az `Admin` rész opcionális: fejlesztői indításkor ebből jön létre az admin fiók, mert regisztrációval csak `Customer` szerepkörű felhasználó készül. Ha az e-mail cím már regisztrálva van, a fiók Admin szerepkört kap, a jelszava nem változik.
 
 Véletlen kulcs generálása PowerShellben:
 
@@ -66,7 +59,19 @@ npm run dev
 
 A Vite dev szerver az `/api` kéréseket a backendre (`localhost:5006`) továbbítja.
 
-## Admin API
+## Admin
+
+Fejlesztői indításkor (Development) automatikusan létrejön egy közös admin fiók, mert regisztrációval csak `Customer` szerepkörű felhasználó készül:
+
+| E-mail | Jelszó |
+|--------|--------|
+| `admin@bikerental.local` | `Admin123!` |
+
+Az adatok a `Backend/appsettings.json` `Admin` részében vannak, és a saját `appsettings.Development.json`-odban felülírhatók. Ha az e-mail cím már regisztrálva van, a fiók Admin szerepkört kap, a jelszava nem változik. Éles (nem Development) környezetben a fiók nem jön létre.
+
+Az admin felület: `http://localhost:5173/admin`
+
+### Admin API
 
 Minden végponthoz Admin szerepkörű JWT kell.
 
