@@ -89,7 +89,3 @@ Backend/          ASP.NET Core API
 Backend.Tests/    xUnit integrációs tesztek
 Frontend/         React + Vite kliens
 ```
-
-## Közreműködés
-
-Branch-elés, PR és commit szabályok: [CONTRIBUTING.md](CONTRIBUTING.md)
