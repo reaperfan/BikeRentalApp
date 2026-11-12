@@ -1,6 +1,6 @@
 # BikeRental rendszer teszt jegyzőkönyv
 
-Tesztelést végezte: Mester Ottó (Claude Code segítségével)  
+ 
 Operációs rendszer: Windows 11 Pro  
 Böngésző: Chromium alapú beépített böngésző (Claude asztali alkalmazás)  
 Képernyőméret: kb. 750 px széles panel, valamint 375 × 812 px mobilnézet  
