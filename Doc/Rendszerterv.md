@@ -14,15 +14,32 @@ A rendszer a foglalások ütközésmentességét szerveroldalon garantálja, a s
 
 ### 2.1 Projektszerepkörök, felelősségek
 
-Scrum master: *(kitöltendő)*
-Feladata a sprintek szervezése, a napi egyeztetések vezetése, az akadályok feltárása és elhárítása.
+### Projektcsapat és szerepkörök
 
-Product owner: *(kitöltendő)*
-Feladata a prioritással és üzleti értékkel ellátott felhasználói sztorikat tartalmazó Product Backlog vezetése.
+A projektet háromfős csapatban, egyetemi tanulmányaink keretében valósítottuk meg. A projekt kis mérete miatt a Scrum szerepköreit egyszerűsített formában alkalmaztuk, a fejlesztési feladatokat közösen végeztük.
 
-Üzleti szereplők (Stakeholders):
-- Megrendelő: a kerékpárkölcsönző és -szerviz tulajdonosa.
-- Felhasználók: a kölcsönző ügyfelei és munkatársai.
+**Scrum Master: Mester Ottó**
+
+Feladata a csapat munkájának összehangolása, a feladatok követése, az egyeztetések szervezése és a felmerülő problémák megoldásának segítése.
+
+**Product Owner: Közösen ellátott szerepkör**
+
+A projekt során nem jelöltünk ki külön Product Ownert. A fejlesztési követelményeket, a Product Backlog tartalmát és a feladatok prioritását a csapat közösen határozta meg.
+
+**Fejlesztőcsapat:**
+- Rácz Roland
+- Mester Ottó
+- Hajtun Atilla
+
+A csapat minden tagja részt vett a rendszer fejlesztésében, tesztelésében és a feladatok megtervezésében.
+
+**Üzleti szereplők (Stakeholders):**
+
+Mivel a projekt oktatási célból készült, valós megrendelővel nem rendelkeztünk. A rendszer egy kerékpárkölcsönző és -szerviz működését modellezi.
+
+- **Feltételezett megrendelő:** a kerékpárkölcsönző és -szerviz tulajdonosa.
+- **Célfelhasználók:** a kölcsönző ügyfelei és munkatársai.
+- **Oktatási szereplő:** a projektet értékelő oktató.
 
 ### 2.2 Projektmunkások és felelősségeik
 
@@ -31,17 +48,17 @@ A felelősségi területek a verziókezelő történetéből (commitok) állnak 
 Frontend:
 - Mester Ottó – bejelentkezés, regisztráció, főoldal, profil, adminisztrátori vezérlőpult
 - Rácz Roland – szervizidőpont-foglaló felület, értékelések felülete
-- Ati *(GitHub: atimaki, teljes név kitöltendő)* – kerékpárkatalógus, foglalási oldal, kosár, fejléc, kerékpárképek
+- Hajtun Atilla – kerékpárkatalógus, foglalási oldal, kosár, fejléc, kerékpárképek
 
 Backend:
 - Mester Ottó – projektváz, adatbázis, JWT-hitelesítés, adminisztrátori végpontok, képfeltöltés
 - Rácz Roland – szervizidőpont-foglalás, értékelések, kapcsolódó migrációk
-- Ati – kerékpár- és bérlési tábla, kerékpár- és bérlési végpontok, seed adatok
+- Hajtun Atilla – kerékpár- és bérlési tábla, kerékpár- és bérlési végpontok, seed adatok
 
 Tesztelés:
 - Mester Ottó – hitelesítés és adminisztráció tesztjei
 - Rácz Roland – értékelések és migrációk tesztjei
-- Ati – kerékpár- és bérlési tesztek, katalógus és kosár frontendtesztjei
+- Hajtun Atilla – kerékpár- és bérlési tesztek, katalógus és kosár frontendtesztjei
 
 ### 2.3 Ütemterv
 
@@ -64,11 +81,16 @@ Tesztelés:
 
 ### 2.4 Mérföldkövek
 
-- Hitelesítés és alap felület (bejelentkezés, regisztráció, profil) – 2026.10.20.
-- Szervizfoglalás és értékelések – 2026.11.09.
-- Bérlési folyamat kosárral – 2026.11.11.
-- Adminisztrátori vezérlőpult – 2026.11.11.
-- Az elkészült szoftver átadása – *(kitöltendő)*
+### Projektmérföldkövek
+
+- **2026.10.20.** – Projektindítás, feladatok felosztása, Git repository és fejlesztési környezet kialakítása.
+- **2026.10.25.** – Adatbázisstruktúra kialakítása, a Users, Bikes, Rentals, ServiceAppointments és Reviews táblák létrehozása.
+- **2026.10.30.** – Felhasználókezelési és hitelesítési modul elkészítése (regisztráció, bejelentkezés, JWT-alapú hitelesítés, profilkezelés) – *Mester Ottó*.
+- **2026.11.04.** – Kerékpárkatalógus, szűrési lehetőségek és kölcsönzési rendszer megvalósítása – *Hajtun Attila*.
+- **2026.11.07.** – Szervizidőpont-foglalási és értékelési rendszer elkészítése – *Rácz Roland*.
+- **2026.11.09.** – A három modul integrálása, frontend és backend funkciók összehangolása.
+- **2026.11.10.** – Unit tesztek, funkcionális ellenőrzések és hibajavítások.
+- **2026.11.11.** – A fejlesztés lezárása, dokumentáció véglegesítése és a szoftver bemutatásra való előkészítése.
 
 ## 3. Üzleti folyamatok modellje
 
