@@ -38,7 +38,9 @@ public static class BikeEndpoints
         })
         .WithName("GetBikes")
         .WithOpenApi()
-        .WithDescription("Összes bicikli listája. Opcionális szűrési paraméterek: type (BikeType), available (bool)")
+        .WithSummary("Kerékpárok listája")
+        .WithDescription("Az összes kerékpár. Opcionális szűrés: `type` (kerékpártípus), `available` (true: csak a bérelhetők). " +
+            "Ebből épül a katalógus. Bejelentkezés nem kell.")
         .Produces(StatusCodes.Status200OK);
 
         // Konkrét bicikli lekérdezése ID alapján
@@ -52,7 +54,9 @@ public static class BikeEndpoints
                 bike.Id, bike.Name, bike.Type, bike.DailyPrice, bike.ImageUrl, bike.IsAvailable));
         })
         .WithName("GetBikeById")
-        .WithOpenApi();
+        .WithOpenApi()
+        .WithSummary("Kerékpár adatai")
+        .WithDescription("Egy kerékpár adatai azonosító alapján. Nem létező azonosítóra 404. Bejelentkezés nem kell.");
 
         // Admin operációk
         var adminGroup = routes.MapGroup("/api/bikes").WithTags("Bikes Admin").RequireAuthorization(AuthConstants.AdminPolicy);
@@ -80,6 +84,9 @@ public static class BikeEndpoints
         })
         .WithName("CreateBike")
         .WithOpenApi()
+        .WithSummary("Kerékpár felvétele")
+        .WithDescription("Új kerékpárt hoz létre, elérhető állapotban. Kötelező: név (legfeljebb 100 karakter), típus, " +
+            "pozitív napidíj és kép URL (ezt a `POST /api/admin/bike-images` adja vissza). Hibás adatra 400. Csak admin.")
         .Produces(StatusCodes.Status201Created)
         .Produces(StatusCodes.Status400BadRequest);
 
@@ -106,6 +113,9 @@ public static class BikeEndpoints
         })
         .WithName("UpdateBike")
         .WithOpenApi()
+        .WithSummary("Kerékpár módosítása")
+        .WithDescription("A kerékpár összes adatát felülírja, az elérhetőséget is (`isAvailable: false` letiltja, " +
+            "nem lesz bérelhető). Hibás adatra 400, nem létező kerékpárra 404. Csak admin.")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status400BadRequest);
@@ -128,6 +138,9 @@ public static class BikeEndpoints
         })
         .WithName("DeleteBike")
         .WithOpenApi()
+        .WithSummary("Kerékpár törlése")
+        .WithDescription("Véglegesen törli a kerékpárt. Ha kölcsönzés tartozik hozzá, nem törölhető (409): " +
+            "ilyenkor módosítással állítsd nem elérhetőre. Nem létező kerékpárra 404. Csak admin.")
         .Produces(StatusCodes.Status204NoContent)
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status409Conflict);

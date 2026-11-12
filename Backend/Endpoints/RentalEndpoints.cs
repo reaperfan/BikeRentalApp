@@ -31,6 +31,9 @@ public static class RentalEndpoints {
         .AllowAnonymous()
         .WithName("GetRentals")
         .WithOpenApi()
+        .WithSummary("Kölcsönzések listája")
+        .WithDescription("Az összes kölcsönzés a kerékpár nevével, az ügyfél nevével és e-mail címével. " +
+            "Jelenleg bejelentkezés nélkül is hívható.")
         .Produces(StatusCodes.Status200OK);
 
         // Konkrét kölcsönzés lekérdezése ID alapján
@@ -57,6 +60,8 @@ public static class RentalEndpoints {
         .AllowAnonymous()
         .WithName("GetRentalById")
         .WithOpenApi()
+        .WithSummary("Kölcsönzés adatai")
+        .WithDescription("Egy kölcsönzés azonosító alapján. Nem létező azonosítóra 404. Jelenleg bejelentkezés nélkül is hívható.")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -82,6 +87,9 @@ public static class RentalEndpoints {
         .AllowAnonymous()
         .WithName("GetRentalsByBike")
         .WithOpenApi()
+        .WithSummary("Egy kerékpár kölcsönzései")
+        .WithDescription("Egy kerékpár összes kölcsönzése, ebből látszik, mely napokon foglalt. " +
+            "Jelenleg bejelentkezés nélkül is hívható.")
         .Produces(StatusCodes.Status200OK);
 
         // Új kölcsönzés létrehozása (POST) - csak bejelentkezett felhasználó
@@ -141,6 +149,10 @@ public static class RentalEndpoints {
         .RequireAuthorization()
         .WithName("CreateRental")
         .WithOpenApi()
+        .WithSummary("Kerékpár foglalása")
+        .WithDescription("Új kölcsönzést hoz létre. Ellenőrzi: az ügyfél neve kötelező, az e-mail cím érvényes, " +
+            "a kerékpár létezik, a kezdés a befejezés előtt van és nem múltbeli, és nincs átfedés másik foglalással. " +
+            "Hibára 400, token nélkül 401.")
         .Produces(StatusCodes.Status201Created)
         .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status401Unauthorized);
@@ -188,6 +200,9 @@ public static class RentalEndpoints {
         .AllowAnonymous()
         .WithName("UpdateRental")
         .WithOpenApi()
+        .WithSummary("Kölcsönzés időszakának módosítása")
+        .WithDescription("A kezdő és a záró dátumot módosítja. Rossz sorrendre vagy más foglalással való átfedésre 400, " +
+            "nem létező kölcsönzésre 404. Jelenleg bejelentkezés nélkül is hívható.")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status400BadRequest);
@@ -206,6 +221,8 @@ public static class RentalEndpoints {
         .AllowAnonymous()
         .WithName("DeleteRental")
         .WithOpenApi()
+        .WithSummary("Kölcsönzés törlése")
+        .WithDescription("Törli a kölcsönzést. Nem létező kölcsönzésre 404. Jelenleg bejelentkezés nélkül is hívható.")
         .Produces(StatusCodes.Status204NoContent)
         .Produces(StatusCodes.Status404NotFound);
     }

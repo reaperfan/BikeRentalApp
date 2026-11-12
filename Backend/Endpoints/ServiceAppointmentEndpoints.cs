@@ -43,20 +43,33 @@ public static class ServiceAppointmentEndpoints
             return Results.Ok(new { timeZone = schedule.TimeZoneId, slotMinutes = schedule.SlotMinutes,
                 slots = slots.Select(s => new { startsAt = new DateTimeOffset(s),
                     endsAt = new DateTimeOffset(s.AddMinutes(schedule.SlotMinutes)), available = !busy.Contains(s) }) });
-        });
+        })
+        .WithSummary("Szabad szervizidőpontok")
+        .WithDescription("A `from`–`to` napok szervizidőpontjai (legfeljebb 31 nap, mától a foglalási időszak végéig); " +
+            "az `available` mező jelzi, szabad-e. A válasz az időzónát és az időpontok hosszát is megadja. Hibás időszakra 400.");
         group.MapGet("/", async (ClaimsPrincipal user, BikeDbContext db, CancellationToken ct) =>
         {
             if (UserId(user) is not int id) return Results.Unauthorized();
             var items = await db.ServiceAppointments.AsNoTracking().Where(a => a.UserId == id)
                 .OrderBy(a => a.AppointmentDate).ToListAsync(ct);
             return Results.Ok(items.Select(Response));
-        });
+        })
+        .WithSummary("Saját szervizfoglalásaim")
+        .WithDescription("A bejelentkezett felhasználó szervizfoglalásai időrendben, státusszal (Pending, Confirmed, Completed, Cancelled).");
         group.MapPost("/", (ServiceAppointmentRequest request, ClaimsPrincipal user, BikeDbContext db,
             IOptions<ServiceSchedule> schedule, TimeProvider clock, CancellationToken ct) =>
-            Book(null, request, user, db, schedule.Value, clock, ct));
+            Book(null, request, user, db, schedule.Value, clock, ct))
+        .WithSummary("Szervizidőpont foglalása")
+        .WithDescription("Új szervizfoglalás Pending státusszal. Kötelező a kerékpár és a szerviz típusa (legfeljebb 100 karakter), " +
+            "a leírás legfeljebb 1000 karakter. Csak jövőbeli, nyitvatartáson belüli időpont foglalható (különben 400), " +
+            "foglalt időpontra 409.");
         group.MapPut("/{id:int}", (int id, ServiceAppointmentRequest request, ClaimsPrincipal user,
             BikeDbContext db, IOptions<ServiceSchedule> schedule, TimeProvider clock, CancellationToken ct) =>
-            Book(id, request, user, db, schedule.Value, clock, ct));
+            Book(id, request, user, db, schedule.Value, clock, ct))
+        .WithSummary("Szervizfoglalás módosítása")
+        .WithDescription("Saját, még nem esedékes Pending vagy Confirmed foglalás időpontját és adatait módosítja; " +
+            "a státusz visszaáll Pending-re. Ugyanaz az ellenőrzés, mint foglaláskor. Nem módosítható foglalásra vagy " +
+            "foglalt időpontra 409, nem létezőre 404.");
         group.MapDelete("/{id:int}", async (int id, ClaimsPrincipal user, BikeDbContext db,
             TimeProvider clock, CancellationToken ct) =>
         {
@@ -67,7 +80,10 @@ public static class ServiceAppointmentEndpoints
             if (count > 0) return Results.NoContent();
             return await db.ServiceAppointments.AnyAsync(a => a.Id == id && a.UserId == userId, ct)
                 ? Results.Conflict(new { message = "Ez a foglalás már nem mondható le." }) : Results.NotFound();
-        });
+        })
+        .WithSummary("Szervizfoglalás lemondása")
+        .WithDescription("Cancelled státuszra állítja a foglalást, nem törli. Csak saját, még nem esedékes Pending vagy " +
+            "Confirmed foglalás mondható le, különben 409. Nem létezőre 404.");
         var admin = group.MapGroup("/admin").RequireAuthorization(AuthConstants.AdminPolicy);
         admin.MapGet("/", async (DateOnly from, DateOnly to, BikeDbContext db, IOptions<ServiceSchedule> options, CancellationToken ct) =>
         {
@@ -78,7 +94,10 @@ public static class ServiceAppointmentEndpoints
             var items = await db.ServiceAppointments.AsNoTracking().Where(a => a.AppointmentDate >= start && a.AppointmentDate < end)
                 .OrderBy(a => a.AppointmentDate).ToListAsync(ct);
             return Results.Ok(items.Select(a => new { a.UserId, appointment = Response(a) }));
-        });
+        })
+        .WithSummary("Szervizfoglalások (admin)")
+        .WithDescription("Minden felhasználó szervizfoglalása a `from`–`to` napokon (a szerviz időzónája szerint), " +
+            "a foglaló azonosítójával. Legfeljebb kb. egy év kérhető le, hibás tartományra 400. Csak admin.");
         admin.MapPatch("/{id:int}/status", async (int id, ServiceStatusRequest request, BikeDbContext db, CancellationToken ct) =>
         {
             string[] previous = request.Status switch {
@@ -90,7 +109,10 @@ public static class ServiceAppointmentEndpoints
             if (count > 0) return Results.NoContent();
             return await db.ServiceAppointments.AnyAsync(a => a.Id == id, ct)
                 ? Results.Conflict(new { message = "Nem engedélyezett státuszváltás." }) : Results.NotFound();
-        });
+        })
+        .WithSummary("Szervizstátusz módosítása")
+        .WithDescription("Engedélyezett váltások: Pending → Confirmed, Confirmed → Completed, Pending vagy Confirmed → Cancelled. " +
+            "Más célstátuszra 400, nem engedélyezett váltásra 409, nem létező foglalásra 404. Csak admin.");
     }
 
     private static async Task<IResult> Book(int? id, ServiceAppointmentRequest request, ClaimsPrincipal user,

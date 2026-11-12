@@ -44,14 +44,19 @@ public static class AdminEndpoints
                 await db.ServiceAppointments.CountAsync(a => a.Status == "Pending", ct),
                 ratings.Count,
                 ratings.Count == 0 ? null : ratings.Average()));
-        }).WithName("GetAdminStats");
+        }).WithName("GetAdminStats")
+        .WithSummary("Admin összesítő")
+        .WithDescription("Az irányítópult számai: kerékpárok (összes, elérhető), felhasználók (összes, admin), " +
+            "kölcsönzések (összes, most futó, jövőbeli), teljes bevétel, függő szervizfoglalások, értékelések száma és átlaga. Csak admin.");
 
         // Felhasználók
         group.MapGet("/users", async (BikeDbContext db, CancellationToken ct) =>
         {
             var users = await db.Users.AsNoTracking().OrderBy(u => u.Id).ToListAsync(ct);
             return Results.Ok(users.Select(u => new AdminUserResponse(u.Id, u.Username, u.Email, u.Role, u.CreatedAt)));
-        }).WithName("GetAdminUsers");
+        }).WithName("GetAdminUsers")
+        .WithSummary("Felhasználók listája")
+        .WithDescription("Az összes felhasználó azonosító szerint rendezve: név, e-mail, szerepkör, regisztráció ideje. Csak admin.");
 
         // A szerepkör-változás a felhasználó következő bejelentkezésekor kerül a tokenbe.
         group.MapPatch("/users/{id:int}/role", async (int id, UserRoleRequest request, ClaimsPrincipal principal,
@@ -70,7 +75,10 @@ public static class AdminEndpoints
             user.Role = request.Role;
             await db.SaveChangesAsync(ct);
             return Results.Ok(new AdminUserResponse(user.Id, user.Username, user.Email, user.Role, user.CreatedAt));
-        }).WithName("UpdateUserRole");
+        }).WithName("UpdateUserRole")
+        .WithSummary("Szerepkör módosítása")
+        .WithDescription("`Admin` vagy `Customer` szerepkört állít be. A saját admin jog nem vehető el (400), így mindig marad admin. " +
+            "A változás a felhasználó következő bejelentkezésekor kerül a tokenbe. Nem létező felhasználóra 404. Csak admin.");
 
         // Kölcsönzések (szűrés: bicikli, időszak; a végösszeggel együtt)
         group.MapGet("/rentals", async (BikeDbContext db, int? bikeId, DateTime? from, DateTime? to, CancellationToken ct) =>
@@ -82,7 +90,10 @@ public static class AdminEndpoints
 
             var rentals = await query.OrderByDescending(r => r.StartDate).ToListAsync(ct);
             return Results.Ok(rentals.Select(Response));
-        }).WithName("GetAdminRentals");
+        }).WithName("GetAdminRentals")
+        .WithSummary("Kölcsönzések napszámmal és végösszeggel")
+        .WithDescription("Kölcsönzések a napok számával és a végösszeggel (napok × napidíj), a legkésőbb kezdődő elöl. " +
+            "Opcionális szűrés: `bikeId`, valamint `from` és `to` (az időszakkal átfedő kölcsönzések). Csak admin.");
 
         // Bicikli kép feltöltése (multipart/form-data, "file" mező); a válasz URL-je mehet az ImageUrl-be
         group.MapPost("/bike-images", async (IFormFile? file, UploadStorage storage, CancellationToken ct) =>
@@ -104,12 +115,18 @@ public static class AdminEndpoints
         })
         // JWT-vel hitelesítünk, nincs cookie, így az antiforgery token nem szükséges
         .DisableAntiforgery()
-        .WithName("UploadBikeImage");
+        .WithName("UploadBikeImage")
+        .WithSummary("Kerékpárkép feltöltése")
+        .WithDescription("Képfeltöltés `multipart/form-data` formában, `file` mezőben. JPG, PNG vagy WEBP, legfeljebb 5 MB; " +
+            "a típust a fájl tartalmából ellenőrzi, nem a kiterjesztésből. A válaszban kapott `url` kerül a kerékpár " +
+            "`imageUrl` mezőjébe. Hibára 400. Csak admin.");
 
         group.MapDelete("/rentals/{id:int}", async (int id, BikeDbContext db, CancellationToken ct) =>
         {
             var count = await db.Rentals.Where(r => r.Id == id).ExecuteDeleteAsync(ct);
             return count == 0 ? Results.NotFound(new { message = "Kölcsönzés nem található." }) : Results.NoContent();
-        }).WithName("DeleteAdminRental");
+        }).WithName("DeleteAdminRental")
+        .WithSummary("Kölcsönzés törlése (admin)")
+        .WithDescription("Bármely kölcsönzést törli. Nem létező kölcsönzésre 404. Csak admin.");
     }
 }

@@ -37,7 +37,10 @@ public static class ReviewEndpoints
                 .Select(r => new { r.Id, AuthorName = r.User.Username, r.Rating, r.Comment, r.CreatedAt }).ToListAsync(ct);
             return Results.Ok(new ReviewPage(number, size, total,
                 rows.Select(r => new PublicReviewResponse(r.Id, r.AuthorName, r.Rating, r.Comment, Utc(r.CreatedAt))).ToList()));
-        }).AllowAnonymous().WithName("GetReviews");
+        }).AllowAnonymous().WithName("GetReviews")
+        .WithSummary("Értékelések listája")
+        .WithDescription("Lapozott lista, a legújabb elöl, a szerző felhasználónevével. Paraméterek: `page` (alapértelmezés 1), " +
+            "`pageSize` (alapértelmezés 10, legfeljebb 100), `rating` (szűrés 1–5 pontra). Hibás paraméterre 400. Bejelentkezés nem kell.");
 
         group.MapGet("/summary", async (BikeDbContext db, CancellationToken ct) =>
         {
@@ -48,7 +51,9 @@ public static class ReviewEndpoints
                 total == 0 ? null : counts.Sum(r => (double)r.Key * r.Value) / total,
                 counts.GetValueOrDefault(1), counts.GetValueOrDefault(2), counts.GetValueOrDefault(3),
                 counts.GetValueOrDefault(4), counts.GetValueOrDefault(5)));
-        }).AllowAnonymous().WithName("GetReviewSummary");
+        }).AllowAnonymous().WithName("GetReviewSummary")
+        .WithSummary("Értékelések összesítője")
+        .WithDescription("Az értékelések száma, átlaga és pontszámonkénti (1–5) eloszlása. Értékelés nélkül az átlag null. Bejelentkezés nem kell.");
 
         group.MapGet("/mine", async (ClaimsPrincipal user, BikeDbContext db, CancellationToken ct) =>
         {
@@ -56,7 +61,9 @@ public static class ReviewEndpoints
             var reviews = await db.Reviews.AsNoTracking().Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.Id).ToListAsync(ct);
             return Results.Ok(reviews.Select(Own));
-        }).WithName("GetMyReviews");
+        }).WithName("GetMyReviews")
+        .WithSummary("Saját értékeléseim")
+        .WithDescription("A bejelentkezett felhasználó értékelései, a legújabb elöl. Token nélkül 401.");
 
         group.MapPost("/", async (CreateReviewRequest request, ClaimsPrincipal user, BikeDbContext db,
             TimeProvider clock, CancellationToken ct) =>
@@ -69,7 +76,10 @@ public static class ReviewEndpoints
             db.Reviews.Add(review);
             await db.SaveChangesAsync(ct);
             return Results.Created($"/api/reviews/{review.Id}", Own(review));
-        }).WithName("CreateReview");
+        }).WithName("CreateReview")
+        .WithSummary("Értékelés írása")
+        .WithDescription("Új értékelés 1–5 pontszámmal és opcionális, legfeljebb 2000 karakteres véleménnyel. " +
+            "Hibás adatra 400, token nélkül 401.");
 
         group.MapGet("/{id:int}", async (int id, BikeDbContext db, CancellationToken ct) =>
         {
@@ -77,7 +87,9 @@ public static class ReviewEndpoints
                 .Select(r => new { r.Id, AuthorName = r.User.Username, r.Rating, r.Comment, r.CreatedAt }).SingleOrDefaultAsync(ct);
             return row == null ? Results.NotFound(new { message = "Az értékelés nem található." }) : Results.Ok(
                 new PublicReviewResponse(row.Id, row.AuthorName, row.Rating, row.Comment, Utc(row.CreatedAt)));
-        }).AllowAnonymous().WithName("GetReview");
+        }).AllowAnonymous().WithName("GetReview")
+        .WithSummary("Értékelés adatai")
+        .WithDescription("Egy értékelés azonosító alapján, a szerző felhasználónevével. Nem létezőre 404. Bejelentkezés nem kell.");
 
         group.MapPut("/{id:int}", async (int id, UpdateReviewRequest request, ClaimsPrincipal user, BikeDbContext db, CancellationToken ct) =>
         {
@@ -88,19 +100,26 @@ public static class ReviewEndpoints
             var count = await db.Reviews.Where(r => r.Id == id && r.UserId == userId)
                 .ExecuteUpdateAsync(s => s.SetProperty(r => r.Rating, request.Rating).SetProperty(r => r.Comment, comment), ct);
             return count == 0 ? Results.NotFound(new { message = "Az értékelés nem található." }) : Results.NoContent();
-        }).WithName("UpdateMyReview");
+        }).WithName("UpdateMyReview")
+        .WithSummary("Saját értékelés módosítása")
+        .WithDescription("A pontszámot és a véleményt módosítja. Csak a saját értékelés módosítható: másé vagy nem létező esetén 404. " +
+            "Hibás adatra 400.");
 
         group.MapDelete("/{id:int}", async (int id, ClaimsPrincipal user, BikeDbContext db, CancellationToken ct) =>
         {
             if (UserId(user) is not int userId) return Results.Unauthorized();
             var count = await db.Reviews.Where(r => r.Id == id && r.UserId == userId).ExecuteDeleteAsync(ct);
             return count == 0 ? Results.NotFound(new { message = "Az értékelés nem található." }) : Results.NoContent();
-        }).WithName("DeleteMyReview");
+        }).WithName("DeleteMyReview")
+        .WithSummary("Saját értékelés törlése")
+        .WithDescription("Csak a saját értékelés törölhető: másé vagy nem létező esetén 404.");
 
         group.MapDelete("/admin/{id:int}", async (int id, BikeDbContext db, CancellationToken ct) =>
         {
             var count = await db.Reviews.Where(r => r.Id == id).ExecuteDeleteAsync(ct);
             return count == 0 ? Results.NotFound(new { message = "Az értékelés nem található." }) : Results.NoContent();
-        }).RequireAuthorization(AuthConstants.AdminPolicy).WithName("ModerateReview");
+        }).RequireAuthorization(AuthConstants.AdminPolicy).WithName("ModerateReview")
+        .WithSummary("Értékelés moderálása")
+        .WithDescription("Bármely értékelést törli (például sértő tartalom miatt). Nem létezőre 404. Csak admin.");
     }
 }

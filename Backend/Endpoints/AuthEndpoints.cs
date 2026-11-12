@@ -33,7 +33,10 @@ public static class AuthEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Sikeres regisztráció!" });
-        });
+        })
+        .WithSummary("Regisztráció")
+        .WithDescription("Új felhasználói fiókot hoz létre Customer szerepkörrel. A jelszó BCrypt hash-ként tárolódik. " +
+            "Már regisztrált e-mail címre 400. Bejelentkezés nem kell.");
 
         // Bejelentkezés
         anonymous.MapPost("/login", async (UserLoginDto dto, BikeDbContext db, ITokenService tokens) =>
@@ -44,7 +47,11 @@ public static class AuthEndpoints
 
             var token = tokens.CreateToken(user);
             return Results.Ok(new LoginResponseDto(token.AccessToken, token.ExpiresAt, user.Username, user.Role));
-        });
+        })
+        .WithSummary("Bejelentkezés")
+        .WithDescription("E-mail és jelszó alapján JWT tokent ad (60 percig érvényes) a felhasználónévvel és a szerepkörrel együtt. " +
+            "A tokent a további kérésekben az `Authorization: Bearer <token>` fejlécben kell küldeni (Swaggerben: Authorize gomb). " +
+            "Hibás e-mailre vagy jelszóra 401.");
 
         // Bejelentkezett felhasználó adatai (érvényes token kell)
         group.MapGet("/me", async (ClaimsPrincipal principal, BikeDbContext db) =>
@@ -57,6 +64,9 @@ public static class AuthEndpoints
                 return Results.Unauthorized();
 
             return Results.Ok(new UserInfoDto(user.Id, user.Username, user.Email, user.Role, user.CreatedAt));
-        });
+        })
+        .WithSummary("Saját adatok")
+        .WithDescription("A tokenhez tartozó felhasználó adatai: azonosító, név, e-mail, szerepkör, regisztráció ideje. " +
+            "A frontend ezzel ellenőrzi induláskor, hogy a tárolt token még érvényes-e. Token nélkül vagy lejárt tokennel 401.");
     }
 }
