@@ -1,6 +1,6 @@
 # BikeRental rendszer teszt jegyzőkönyv
 
-Tesztelést végezte: Mester Ottó (Claude Code segítségével)  
+
 Operációs rendszer: Windows 11 Pro  
 Tesztkörnyezet: .NET SDK 10.0.403, xUnit; Node.js 26, Vitest 5.1  
 Dátum: 2026.11.11.  
